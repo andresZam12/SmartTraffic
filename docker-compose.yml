@@ -1,0 +1,141 @@
+version: "3.8"
+
+services:
+
+  # ─────────────────────────────────────────────
+  # INFRAESTRUCTURA: Zookeeper (requerido por Kafka)
+  # ─────────────────────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - smarttraffic_net
+
+  # ─────────────────────────────────────────────
+  # INFRAESTRUCTURA: Apache Kafka
+  # ─────────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - smarttraffic_net
+
+  # ─────────────────────────────────────────────
+  # INFRAESTRUCTURA: RabbitMQ con panel de administración
+  # ─────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # puerto AMQP (mensajería)
+      - "15672:15672"  # panel web: http://localhost:15672 (guest/guest)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - smarttraffic_net
+
+  # ─────────────────────────────────────────────
+  # MICROSERVICIO 1: Simulador de sensores (Productor Kafka)
+  # ─────────────────────────────────────────────
+  traffic_sensor_simulator:
+    build: ./traffic_sensor_simulator
+    container_name: sensor_simulator
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: kafka:9092
+    networks:
+      - smarttraffic_net
+    restart: on-failure
+
+  # ─────────────────────────────────────────────
+  # MICROSERVICIO 2: Procesador de densidad (Consumer Kafka / Producer RabbitMQ)
+  # ─────────────────────────────────────────────
+  traffic_density_processor:
+    build: ./traffic_density_processor
+    container_name: density_processor
+    depends_on:
+      - kafka
+      - rabbitmq
+    environment:
+      KAFKA_BROKER: kafka:9092
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - smarttraffic_net
+    restart: on-failure
+
+  # ─────────────────────────────────────────────
+  # MICROSERVICIO 3: Archivador (Consumer Kafka)
+  # ─────────────────────────────────────────────
+  traffic_archiver:
+    build: ./traffic_archiver
+    container_name: traffic_archiver
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKER: kafka:9092
+    networks:
+      - smarttraffic_net
+    restart: on-failure
+
+  # ─────────────────────────────────────────────
+  # MICROSERVICIO 4: Backend del dashboard (Consumer RabbitMQ / WebSocket)
+  # ─────────────────────────────────────────────
+  user_dashboard_backend:
+    build: ./user_dashboard_backend
+    container_name: dashboard_backend
+    depends_on:
+      - rabbitmq
+    ports:
+      - "8765:8765"  # WebSocket accesible desde el navegador
+    environment:
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - smarttraffic_net
+    restart: on-failure
+
+  # ─────────────────────────────────────────────
+  # MICROSERVICIO 5: Despachador de alertas (Consumer/Producer RabbitMQ)
+  # ─────────────────────────────────────────────
+  alert_dispatcher:
+    build: ./alert_dispatcher
+    container_name: alert_dispatcher
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - smarttraffic_net
+    restart: on-failure
+
+  # ─────────────────────────────────────────────
+  # MICROSERVICIO 6: Cliente de consultas (Producer/Consumer RabbitMQ)
+  # ─────────────────────────────────────────────
+  query_client:
+    build: ./query_client
+    container_name: query_client
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_HOST: rabbitmq
+    networks:
+      - smarttraffic_net
+    restart: on-failure
+
+networks:
+  smarttraffic_net:
+    driver: bridge
