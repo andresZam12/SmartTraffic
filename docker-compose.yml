@@ -101,7 +101,8 @@ services:
     depends_on:
       - rabbitmq
     ports:
-      - "8765:8765"  # WebSocket accesible desde el navegador
+      - "8765:8765"  # WebSocket para el dashboard
+      - "8766:8766"  # API REST: /estado  /sensores  /health
     environment:
       RABBITMQ_HOST: rabbitmq
     networks:

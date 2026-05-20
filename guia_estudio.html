@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<title>SmartTraffic — Guía de Estudio</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #1e293b;
+    background: #fff;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 36px 44px;
+  }
+
+  /* ══ PORTADA ══ */
+  .portada {
+    text-align: center;
+    padding: 70px 0 60px;
+    border-bottom: 3px solid #2563eb;
+    margin-bottom: 48px;
+    page-break-after: always;
+  }
+  .portada .emoji { font-size: 48pt; display: block; margin-bottom: 16px; }
+  .portada h1 { font-size: 24pt; color: #2563eb; font-weight: 800; margin-bottom: 6px; }
+  .portada h2 { font-size: 12pt; color: #64748b; font-weight: 400; margin-bottom: 28px; }
+  .portada .meta { font-size: 10pt; color: #475569; line-height: 2.2; }
+  .portada .meta b { color: #1e293b; }
+
+  /* ══ TÍTULOS ══ */
+  h2.s {
+    font-size: 15pt;
+    font-weight: 800;
+    color: #fff;
+    background: #2563eb;
+    padding: 10px 18px;
+    border-radius: 8px;
+    margin: 40px 0 18px;
+    page-break-after: avoid;
+  }
+  h3.sub {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: #1e40af;
+    border-bottom: 2px solid #dbeafe;
+    padding-bottom: 4px;
+    margin: 24px 0 10px;
+    page-break-after: avoid;
+  }
+
+  p { margin-bottom: 10px; }
+
+  /* ══ CAJAS ══ */
+  .c {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    page-break-inside: avoid;
+  }
+  .c.azul   { background: #eff6ff; border-left: 5px solid #2563eb; }
+  .c.verde  { background: #f0fdf4; border-left: 5px solid #16a34a; }
+  .c.rojo   { background: #fff1f2; border-left: 5px solid #e11d48; }
+  .c.gris   { background: #f8fafc; border-left: 5px solid #94a3b8; }
+  .c.naranja{ background: #fffbeb; border-left: 5px solid #d97706; }
+  .c b.titulo { display: block; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; color: #64748b; }
+
+  /* ══ CHECKS ══ */
+  .check-list { list-style: none; padding: 0; }
+  .check-list li {
+    padding: 8px 12px 8px 36px;
+    position: relative;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 10.5pt;
+  }
+  .check-list li::before {
+    content: "✅";
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    font-size: 11pt;
+  }
+  .check-list li b { color: #1e40af; }
+
+  /* ══ TABLA ══ */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 10pt; page-break-inside: avoid; }
+  th { background: #2563eb; color: #fff; padding: 9px 14px; text-align: left; font-weight: 700; }
+  td { padding: 8px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  /* ══ CÓDIGO ══ */
+  pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Courier New', monospace;
+    font-size: 8.5pt;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 10px 0;
+    line-height: 1.6;
+    page-break-inside: avoid;
+  }
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  pre code { background: none; padding: 0; font-size: 8.5pt; }
+
+  /* ══ FLUJO ══ */
+  .flujo {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+  .paso {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .paso-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 800;
+    font-size: 11pt;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .paso-contenido {
+    flex: 1;
+    padding-bottom: 16px;
+    border-left: 2px dashed #bfdbfe;
+    padding-left: 14px;
+    margin-left: -7px;
+  }
+  .paso:last-child .paso-contenido { border-left-color: transparent; }
+  .paso-titulo { font-weight: 700; color: #1e40af; font-size: 10.5pt; }
+  .paso-desc   { font-size: 10pt; color: #374151; margin-top: 2px; }
+  .paso-codigo { font-family: 'Courier New', monospace; font-size: 8.5pt; background: #f1f5f9; padding: 6px 10px; border-radius: 5px; margin-top: 6px; display: block; color: #1e293b; }
+
+  /* ══ GLOSARIO ══ */
+  .glosario { margin: 8px 0; }
+  .termino {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 9px 4px;
+    page-break-inside: avoid;
+  }
+  .termino:first-child { border-top: 1px solid #e2e8f0; }
+  .t-n { font-weight: 700; color: #2563eb; font-size: 9.5pt; font-family: 'Courier New', monospace; padding-right: 14px; padding-top: 1px; }
+  .t-d { font-size: 9.5pt; color: #374151; line-height: 1.6; }
+
+  /* ══ SEPARADOR ══ */
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 32px 0; }
+
+  /* ══ BADGE TECH ══ */
+  .techs { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; }
+  .tech {
+    display: inline-block; font-size: 8.5pt; font-weight: 700;
+    padding: 3px 11px; border-radius: 14px;
+    background: #dbeafe; color: #1d4ed8;
+  }
+  .tech.verde  { background: #dcfce7; color: #15803d; }
+  .tech.gris   { background: #f1f5f9; color: #475569; }
+
+  /* ══ PRINT ══ */
+  @media print {
+    body { padding: 18px 24px; font-size: 10.5pt; }
+    .portada { page-break-after: always; }
+    h2.s { page-break-before: auto; }
+    pre, table, .c, .flujo, .termino { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ PORTADA -->
+<div class="portada">
+  <span class="emoji">🚦</span>
+  <h1>SmartTraffic</h1>
+  <h2>Sistema Distribuido de Monitoreo de Tráfico Vehicular en Tiempo Real</h2>
+  <div class="techs" style="justify-content:center; margin-bottom: 24px">
+    <span class="tech">Apache Kafka</span>
+    <span class="tech verde">RabbitMQ</span>
+    <span class="tech verde">Docker Compose</span>
+    <span class="tech gris">Python 3.11</span>
+    <span class="tech gris">WebSocket</span>
+  </div>
+  <div class="meta">
+    <b>Materia:</b> Sistemas Distribuidos &amp; Sistemas Operativos<br/>
+    <b>Repositorio:</b> github.com/andresZam12/SmartTraffic<br/>
+    <b>Fecha:</b> Mayo 2026
+  </div>
+</div>
+
+
+<!-- ══════════════════════════ SECCIÓN 1: QUÉ PEDÍA EL TRABAJO -->
+<h2 class="s">1. ¿Qué pedía el trabajo y qué se construyó?</h2>
+
+<p>El enunciado pedía diseñar un sistema que monitoree el tráfico de una ciudad usando <b>Kafka y RabbitMQ juntos</b>, con datos generados de forma aleatoria (sin base de datos), todo orquestado con Docker Compose. A continuación, cada requisito con lo que se implementó:</p>
+
+<h3 class="sub">Requisitos del enunciado — cumplimiento completo</h3>
+
+<ul class="check-list">
+  <li>
+    <b>traffic_sensor_simulator</b> — Productor Kafka<br/>
+    <span style="font-size:9.5pt; color:#475569">Genera cada segundo un evento aleatorio con zona y número de vehículos (0–100) y lo publica en el topic <code>raw_traffic_data</code> de Kafka.</span>
+  </li>
+  <li>
+    <b>traffic_density_processor</b> — El cerebro del sistema<br/>
+    <span style="font-size:9.5pt; color:#475569">Consume los eventos de Kafka, calcula la densidad de tráfico por zona (KTable) y cada 5 segundos publica el estado completo al Fanout Exchange de RabbitMQ.</span>
+  </li>
+  <li>
+    <b>traffic_archiver</b> — Consumidor Kafka independiente<br/>
+    <span style="font-size:9.5pt; color:#475569">Lee el mismo topic que el processor pero con un grupo diferente. Simula guardar los datos en una base de datos (imprime en consola con partición y offset).</span>
+  </li>
+  <li>
+    <b>user_dashboard_backend</b> — Puente RabbitMQ → WebSocket<br/>
+    <span style="font-size:9.5pt; color:#475569">Recibe el estado del Fanout Exchange y lo envía en tiempo real al navegador mediante WebSocket.</span>
+  </li>
+  <li>
+    <b>alert_dispatcher</b> — Alertas + respuesta a consultas<br/>
+    <span style="font-size:9.5pt; color:#475569">Mantiene una copia local del estado de las zonas. Genera alertas cuando una zona cambia de estado. Escucha consultas de usuarios y responde con el estado actual.</span>
+  </li>
+  <li>
+    <b>query_client</b> — Cliente asíncrono<br/>
+    <span style="font-size:9.5pt; color:#475569">Cada 15 segundos pregunta por 2–3 zonas aleatorias. Recibe la respuesta de forma asíncrona (sin quedarse esperando bloqueado).</span>
+  </li>
+  <li>
+    <b>dashboard.html</b> — Interfaz visual en tiempo real<br/>
+    <span style="font-size:9.5pt; color:#475569">Muestra las 5 zonas con colores: verde (DESPEJADA), naranja (MODERADA) y rojo (CONGESTIONADA). Se actualiza solo cada 5 segundos sin recargar la página.</span>
+  </li>
+  <li>
+    <b>Docker Compose</b> — Orquestación completa<br/>
+    <span style="font-size:9.5pt; color:#475569">Un solo archivo levanta los 9 contenedores: Zookeeper, Kafka, RabbitMQ y los 6 microservicios.</span>
+  </li>
+  <li>
+    <b>Datos aleatorios, sin base de datos</b><br/>
+    <span style="font-size:9.5pt; color:#475569">Los sensores generan <code>random.randint(0, 100)</code>. No hay ningún servicio de base de datos en el sistema.</span>
+  </li>
+</ul>
+
+<h3 class="sub">Los tres objetivos funcionales del enunciado</h3>
+<table>
+  <tr><th>Objetivo del enunciado</th><th>Cómo se cumple</th></tr>
+  <tr>
+    <td><b>Visualización en vivo</b></td>
+    <td>dashboard.html recibe actualizaciones cada 5s por WebSocket y pinta las zonas con colores en tiempo real.</td>
+  </tr>
+  <tr>
+    <td><b>Alertas proactivas</b></td>
+    <td>alert_dispatcher detecta automáticamente cuando una zona cambia de estado e imprime "ALERTA: Zona X ahora está CONGESTIONADA".</td>
+  </tr>
+  <tr>
+    <td><b>Consultas asíncronas</b></td>
+    <td>query_client envía una pregunta y sigue funcionando. Segundos después recibe la respuesta con el estado de cada zona del trayecto.</td>
+  </tr>
+</table>
+
+
+<!-- ══════════════════════════ SECCIÓN 2: POR QUÉ KAFKA + RABBITMQ -->
+<h2 class="s">2. ¿Por qué usar Kafka Y RabbitMQ juntos?</h2>
+
+<p>Esta es la decisión de diseño más importante del proyecto. No se usó solo uno porque cada tecnología resuelve un problema diferente:</p>
+
+<table>
+  <tr><th></th><th>Apache Kafka</th><th>RabbitMQ</th></tr>
+  <tr>
+    <td><b>¿Qué es?</b></td>
+    <td>Un <b>log de eventos</b>. Guarda todos los mensajes en disco. Varios servicios pueden leer el mismo historial sin borrarlo.</td>
+    <td>Un <b>sistema de colas</b>. Entrega el mensaje al destinatario y lo elimina. Ideal para comunicación directa entre servicios.</td>
+  </tr>
+  <tr>
+    <td><b>Ventaja clave</b></td>
+    <td>Permite múltiples consumidores independientes leyendo el mismo flujo sin interferirse.</td>
+    <td>Tiene patrones de enrutamiento flexibles: broadcast a todos (Fanout), distribuir trabajo (Work Queue), respuesta a uno específico (Topic).</td>
+  </tr>
+  <tr>
+    <td><b>Uso en SmartTraffic</b></td>
+    <td>Recibir los datos brutos de los sensores y procesarlos para calcular densidad de tráfico.</td>
+    <td>Distribuir el estado ya procesado al dashboard, al dispatcher y responder consultas de usuarios.</td>
+  </tr>
+  <tr>
+    <td><b>¿Por qué no solo uno?</b></td>
+    <td colspan="2">Kafka no tiene Fanout ni Topic Exchange nativos. RabbitMQ no mantiene estado histórico ni permite múltiples grupos de consumidores independientes fácilmente. Se necesitan los dos.</td>
+  </tr>
+</table>
+
+<div class="c verde" style="margin-top:14px">
+  <b class="titulo">Resumen en una frase</b>
+  <b>Kafka</b> es el sistema de registro — recibe y procesa el flujo de datos brutos. <b>RabbitMQ</b> es el bus de distribución — reparte el estado ya procesado a quien lo necesite.
+</div>
+
+
+<!-- ══════════════════════════ SECCIÓN 3: CÓMO FUNCIONA PASO A PASO -->
+<h2 class="s">3. ¿Cómo funciona el sistema paso a paso?</h2>
+
+<h3 class="sub">El sistema tiene dos flujos que ocurren en paralelo</h3>
+
+<div class="c azul">
+  <b class="titulo">Flujo 1 — El "pulso" del sistema (cada 5 segundos)</b>
+  El sistema genera, procesa y distribuye el estado del tráfico de manera continua y automática.
+</div>
+
+<div class="flujo" style="margin-top:16px">
+  <div class="paso">
+    <div class="paso-num">1</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El sensor genera un dato aleatorio</div>
+      <div class="paso-desc">Cada segundo, el <code>traffic_sensor_simulator</code> elige una zona al azar y genera un conteo de vehículos entre 0 y 100.</div>
+      <span class="paso-codigo">{ "zone_id": "Zona C", "vehicle_count": 85 }</span>
+      <div class="paso-desc" style="margin-top:6px">Lo publica en Kafka usando <code>zone_id</code> como key, lo que garantiza que todos los datos de "Zona C" vayan a la misma partición.</div>
+    </div>
+  </div>
+  <div class="paso">
+    <div class="paso-num">2</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El procesador calcula la densidad (KTable)</div>
+      <div class="paso-desc">El <code>traffic_density_processor</code> lee ese evento de Kafka. Guarda los últimos 5 valores de "Zona C" en una ventana deslizante y calcula el promedio.</div>
+      <span class="paso-codigo">promedio Zona C = (85 + 72 + 90 + 78 + 88) / 5 = 82.6 → CONGESTIONADA</span>
+      <div class="paso-desc" style="margin-top:6px">Actualiza su mapa interno <code>zone_states</code>. Este mapa ES la KTable — siempre tiene el estado actual de cada zona.</div>
+    </div>
+  </div>
+  <div class="paso">
+    <div class="paso-num">3</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El archivador guarda el dato original</div>
+      <div class="paso-desc">Al mismo tiempo, el <code>traffic_archiver</code> también lee ese evento de Kafka con su propio grupo. Imprime en consola simulando un INSERT a base de datos. Ambos consumidores reciben todos los mensajes de forma independiente.</div>
+    </div>
+  </div>
+  <div class="paso">
+    <div class="paso-num">4</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El procesador hace broadcast cada 5 segundos</div>
+      <div class="paso-desc">Cada 5 segundos publica el estado completo de todas las zonas en el <b>Fanout Exchange</b> de RabbitMQ. Un Fanout reparte ese mensaje a TODOS los servicios suscritos al mismo tiempo.</div>
+      <span class="paso-codigo">{ "Zona A": {"estado":"DESPEJADA","promedio":32}, "Zona C": {"estado":"CONGESTIONADA","promedio":82.6}, ... }</span>
+    </div>
+  </div>
+  <div class="paso">
+    <div class="paso-num">5</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El dashboard se actualiza en tiempo real</div>
+      <div class="paso-desc">El <code>user_dashboard_backend</code> recibe ese mensaje del Fanout y lo envía por WebSocket al navegador. El <code>dashboard.html</code> actualiza las tarjetas sin recargar la página: Zona C se pone roja.</div>
+    </div>
+  </div>
+  <div class="paso">
+    <div class="paso-num">6</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El dispatcher actualiza su copia y genera alertas</div>
+      <div class="paso-desc">El <code>alert_dispatcher</code> también recibe el mensaje del Fanout. Actualiza su propio mapa local de zonas. Si Zona C pasó de MODERADA a CONGESTIONADA, imprime automáticamente:</div>
+      <span class="paso-codigo">⚠ ALERTA: Zona C ahora está CONGESTIONADA!</span>
+    </div>
+  </div>
+</div>
+
+<div class="c azul" style="margin-top: 24px">
+  <b class="titulo">Flujo 2 — Consulta de usuario (cada 15 segundos)</b>
+  Un usuario pide información sobre su trayecto y recibe la respuesta sin esperar bloqueado.
+</div>
+
+<div class="flujo" style="margin-top:16px">
+  <div class="paso">
+    <div class="paso-num">1</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El cliente envía una pregunta</div>
+      <div class="paso-desc">El <code>query_client</code> elige 2–3 zonas al azar y publica una consulta en la <b>Work Queue</b> de RabbitMQ. Luego sigue ejecutándose — no se queda esperando la respuesta.</div>
+      <span class="paso-codigo">{ "user_id": "client_a3f9", "trayecto": ["Zona A", "Zona C"] }</span>
+    </div>
+  </div>
+  <div class="paso">
+    <div class="paso-num">2</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">El dispatcher procesa la consulta</div>
+      <div class="paso-desc">El <code>alert_dispatcher</code> toma el mensaje de la Work Queue. Consulta su mapa local (ya actualizado por el Flujo 1) y construye la respuesta al instante — sin preguntar a ningún otro servicio.</div>
+      <span class="paso-codigo">Respuesta: { "Zona A": "DESPEJADA", "Zona C": "CONGESTIONADA" }</span>
+    </div>
+  </div>
+  <div class="paso">
+    <div class="paso-num">3</div>
+    <div class="paso-contenido">
+      <div class="paso-titulo">La respuesta llega solo al cliente correcto</div>
+      <div class="paso-desc">El dispatcher publica la respuesta en el <b>Topic Exchange</b> con la routing key <code>answer.client_a3f9</code>. Solo el cliente con ese ID tiene su cola ligada a esa key, así que solo él recibe la respuesta.</div>
+      <span class="paso-codigo">✅ RESPUESTA RECIBIDA: 🟢 Zona A: DESPEJADA  |  🔴 Zona C: CONGESTIONADA</span>
+    </div>
+  </div>
+</div>
+
+<h3 class="sub">¿Qué significa que el dispatcher tenga "estado replicado"?</h3>
+<div class="c naranja">
+  El dispatcher no le pregunta al procesador cada vez que recibe una consulta. Tiene su <b>propia copia</b> del estado que actualiza solo cuando llega un broadcast del Fanout. Esto lo hace <b>autónomo</b>: puede responder consultas aunque el procesador esté reiniciando. Este patrón se llama <b>estado replicado</b>.
+</div>
+
+<h3 class="sub">Los tres patrones de RabbitMQ en el sistema</h3>
+<table>
+  <tr><th>Patrón</th><th>Nombre del canal</th><th>Para qué sirve aquí</th></tr>
+  <tr>
+    <td><b>Fanout Exchange</b></td>
+    <td><code>traffic_updates</code></td>
+    <td>Envía el estado de las zonas a TODOS los servicios suscritos al mismo tiempo (dashboard + dispatcher).</td>
+  </tr>
+  <tr>
+    <td><b>Work Queue</b></td>
+    <td><code>query_traffic_queue</code></td>
+    <td>Recibe preguntas de usuarios. Si hubiera varios dispatchers, RabbitMQ distribuiría el trabajo entre ellos.</td>
+  </tr>
+  <tr>
+    <td><b>Topic Exchange</b></td>
+    <td><code>query_answers</code></td>
+    <td>Envía la respuesta únicamente al cliente que preguntó, usando <code>answer.&lt;user_id&gt;</code> como dirección.</td>
+  </tr>
+</table>
+
+
+<!-- ══════════════════════════ SECCIÓN 4: DEPENDENCIAS -->
+<h2 class="s">4. Dependencias y tecnologías</h2>
+
+<h3 class="sub">Lo que necesitas instalado en tu máquina</h3>
+<div class="c verde">
+  Solo necesitas <b>Docker Desktop</b>. Todo lo demás (Python, Kafka, RabbitMQ) corre dentro de contenedores — no hay que instalar nada más.
+</div>
+
+<h3 class="sub">Tecnologías usadas y por qué cada una</h3>
+<table>
+  <tr><th>Tecnología</th><th>Versión</th><th>Para qué se usa</th></tr>
+  <tr><td><b>Python 3.11</b></td><td>3.11-slim</td><td>Lenguaje de los 6 microservicios. Imagen "slim" para contenedores livianos.</td></tr>
+  <tr><td><b>kafka-python</b></td><td>2.3.1</td><td>Librería para que Python se conecte a Kafka como productor o consumidor.</td></tr>
+  <tr><td><b>pika</b></td><td>1.4.0</td><td>Librería para que Python se conecte a RabbitMQ usando el protocolo AMQP.</td></tr>
+  <tr><td><b>websockets</b></td><td>16.0</td><td>Librería para el servidor WebSocket que conecta el backend con el dashboard HTML.</td></tr>
+  <tr><td><b>Apache Kafka</b></td><td>7.4.0</td><td>El broker de eventos. Recibe y almacena el flujo de datos de los sensores.</td></tr>
+  <tr><td><b>Zookeeper</b></td><td>7.4.0</td><td>Coordinador requerido por Kafka para gestionar el clúster (obligatorio en esta versión).</td></tr>
+  <tr><td><b>RabbitMQ</b></td><td>3.12-management</td><td>El broker de mensajes. Maneja Fanout, Work Queue y Topic Exchange. La versión "management" incluye panel web en <code>localhost:15672</code>.</td></tr>
+  <tr><td><b>Docker Compose</b></td><td>v2.39</td><td>Levanta los 9 contenedores con un solo comando. Define red, variables de entorno y dependencias.</td></tr>
+</table>
+
+<h3 class="sub">Cómo se instala cada dependencia</h3>
+<p>Cada microservicio tiene su propio <b>Dockerfile</b> que instala solo lo que necesita:</p>
+<pre><code># Ejemplo: Dockerfile del traffic_density_processor
+FROM python:3.11-slim      # imagen base — Python mínimo
+WORKDIR /app               # carpeta de trabajo dentro del contenedor
+RUN pip install kafka-python pika   # instala solo las librerías necesarias
+COPY processor.py .        # copia el script al contenedor
+CMD ["python", "-u", "processor.py"]   # comando que se ejecuta al arrancar</code></pre>
+
+<h3 class="sub">Cómo levantar el sistema completo</h3>
+<pre><code># Clonar el repositorio
+git clone https://github.com/andresZam12/SmartTraffic.git
+cd SmartTraffic
+
+# Construir las imágenes de los 6 microservicios
+docker compose build
+
+# Levantar los 9 contenedores en segundo plano
+docker compose up -d
+
+# Ver que todos estén corriendo
+docker compose ps
+
+# Ver los logs en tiempo real
+docker compose logs -f</code></pre>
+
+<div class="c azul">
+  <b class="titulo">Panel de administración de RabbitMQ</b>
+  Entra a <b>http://localhost:15672</b> con usuario <code>guest</code> y contraseña <code>guest</code>. Desde ahí puedes ver en vivo los exchanges, colas, mensajes publicados y consumidos.
+</div>
+
+
+<!-- ══════════════════════════ GLOSARIO -->
+<h2 class="s">5. Glosario — Términos clave</h2>
+<p>Las palabras más importantes que aparecen en el código y la arquitectura, explicadas de forma simple.</p>
+
+<h3 class="sub">Kafka</h3>
+<div class="glosario">
+  <div class="termino"><div class="t-n">Broker</div><div class="t-d">El servidor central que recibe y guarda mensajes. Kafka es un broker. Los microservicios se conectan a él para publicar o leer mensajes.</div></div>
+  <div class="termino"><div class="t-n">Topic</div><div class="t-d">Canal con nombre donde se publican mensajes en Kafka. Como una "categoría". En SmartTraffic: <code>raw_traffic_data</code> es el topic donde van todos los datos de sensores.</div></div>
+  <div class="termino"><div class="t-n">Producer</div><div class="t-d">Servicio que <em>envía</em> mensajes a Kafka. En SmartTraffic: <code>traffic_sensor_simulator</code> es el producer.</div></div>
+  <div class="termino"><div class="t-n">Consumer</div><div class="t-d">Servicio que <em>lee</em> mensajes de Kafka. En SmartTraffic: <code>traffic_density_processor</code> y <code>traffic_archiver</code> son consumers del mismo topic.</div></div>
+  <div class="termino"><div class="t-n">Consumer Group</div><div class="t-d">Nombre que identifica a un lector independiente. Dos grupos con nombres distintos reciben todos los mensajes por separado, sin quitarse mensajes entre sí. Por eso el processor y el archiver reciben los mismos datos.</div></div>
+  <div class="termino"><div class="t-n">Offset</div><div class="t-d">Número de posición de un mensaje dentro del topic (0, 1, 2...). Kafka lo guarda permanentemente. Cada consumer group guarda su propio offset para saber hasta dónde ha leído.</div></div>
+  <div class="termino"><div class="t-n">Partición</div><div class="t-d">División interna de un topic para paralelismo. Los mensajes con la misma key van a la misma partición, garantizando orden. Por eso se usa <code>zone_id</code> como key: todos los datos de "Zona A" llegan en orden.</div></div>
+  <div class="termino"><div class="t-n">KTable</div><div class="t-d">Patrón que convierte un flujo de eventos en una "tabla del estado actual". El mapa <code>zone_states</code> del procesador es una KTable: siempre muestra el estado más reciente de cada zona, construido procesando todos los eventos históricos.</div></div>
+  <div class="termino"><div class="t-n">Ventana deslizante</div><div class="t-d">Técnica que considera solo los N eventos más recientes en lugar de todos. Se usa <code>deque(maxlen=5)</code> para que el promedio de una zona refleje los últimos 5 valores, no el promedio de toda la historia (que siempre daría ~50).</div></div>
+  <div class="termino"><div class="t-n">Evento</div><div class="t-d">Un dato concreto de algo que ocurrió. En SmartTraffic: <code>{"zone_id": "Zona A", "vehicle_count": 73}</code> es un evento — describe lo que midió el sensor en ese momento.</div></div>
+</div>
+
+<h3 class="sub">RabbitMQ</h3>
+<div class="glosario">
+  <div class="termino"><div class="t-n">Exchange</div><div class="t-d">Punto de entrada en RabbitMQ. El producer envía al exchange y este decide a qué colas distribuir el mensaje según su tipo (Fanout, Topic, Direct).</div></div>
+  <div class="termino"><div class="t-n">Queue (Cola)</div><div class="t-d">Donde RabbitMQ guarda los mensajes hasta que el consumer los lee. A diferencia de Kafka, cuando el mensaje es confirmado se borra de la cola.</div></div>
+  <div class="termino"><div class="t-n">Fanout Exchange</div><div class="t-d">Tipo de exchange que entrega el mensaje a TODAS las colas conectadas al mismo tiempo, sin importar ninguna etiqueta. Es un broadcast puro. En SmartTraffic: <code>traffic_updates</code>.</div></div>
+  <div class="termino"><div class="t-n">Work Queue</div><div class="t-d">Cola de trabajo donde los mensajes se reparten entre los workers disponibles. Solo uno recibe cada mensaje. Con <code>prefetch=1</code>, ningún worker acapara tareas. En SmartTraffic: <code>query_traffic_queue</code>.</div></div>
+  <div class="termino"><div class="t-n">Topic Exchange</div><div class="t-d">Exchange que usa etiquetas con patrones para decidir a qué cola va cada mensaje. En SmartTraffic: <code>query_answers</code> enruta respuestas usando <code>answer.client_a3f9</code> — solo el cliente con ese ID las recibe.</div></div>
+  <div class="termino"><div class="t-n">Routing Key</div><div class="t-d">La "dirección" que se le pone a cada mensaje. El exchange la usa para decidir a qué cola enviarlo. En SmartTraffic: <code>answer.client_a3f9</code> es la routing key que hace llegar la respuesta solo a ese cliente específico.</div></div>
+  <div class="termino"><div class="t-n">Binding</div><div class="t-d">El enlace que conecta una cola con un exchange, con una routing key. Sin binding, ningún mensaje llega a la cola. El query_client crea su binding al arrancar para recibir sus respuestas.</div></div>
+  <div class="termino"><div class="t-n">basic_ack</div><div class="t-d">Confirmación que el consumer envía a RabbitMQ diciendo "recibí y procesé este mensaje, puedes borrarlo". El dispatcher lo usa al terminar de responder una consulta.</div></div>
+  <div class="termino"><div class="t-n">durable</div><div class="t-d">Propiedad que hace que un exchange o cola sobreviva si RabbitMQ se reinicia. Sin esto, toda la configuración se perdería al apagar el servidor.</div></div>
+  <div class="termino"><div class="t-n">prefetch_count</div><div class="t-d">Cuántos mensajes puede tener pendientes un consumer antes de procesar uno y confirmar. Con <code>prefetch=1</code>, el dispatcher toma uno, lo procesa, confirma, y solo entonces toma el siguiente. Garantiza distribución justa si hay varios workers.</div></div>
+  <div class="termino"><div class="t-n">AMQP</div><div class="t-d">Advanced Message Queuing Protocol. El protocolo que usa RabbitMQ para comunicarse. <code>pika</code> es la librería Python que implementa este protocolo.</div></div>
+</div>
+
+<h3 class="sub">Arquitectura y patrones</h3>
+<div class="glosario">
+  <div class="termino"><div class="t-n">Microservicio</div><div class="t-d">Aplicación pequeña e independiente que hace una sola cosa. Se comunica con otros solo por mensajes, nunca llamando directamente al código del otro. En SmartTraffic hay 6 microservicios.</div></div>
+  <div class="termino"><div class="t-n">Estado replicado</div><div class="t-d">Patrón donde un servicio guarda su propia copia del estado en lugar de consultar a otro servicio cada vez. El dispatcher tiene su copia de <code>zone_states</code> y puede responder sin depender del processor.</div></div>
+  <div class="termino"><div class="t-n">Pub/Sub</div><div class="t-d">Publicación / Suscripción. El publisher envía a un canal y quien esté suscrito recibe el mensaje, sin que el publisher sepa quiénes son. El Fanout Exchange implementa este patrón.</div></div>
+  <div class="termino"><div class="t-n">Request/Reply asíncrono</div><div class="t-d">El cliente envía una pregunta y NO espera bloqueado. Sigue funcionando y recibe la respuesta cuando llega, mediante un callback. Así funciona el query_client con el dispatcher.</div></div>
+  <div class="termino"><div class="t-n">Consistencia eventual</div><div class="t-d">El sistema no es inmediatamente consistente: el dispatcher puede tener datos de hasta 5 segundos atrás. Pero eventualmente tendrá el estado correcto cuando llegue el siguiente broadcast. Es un trade-off aceptable por disponibilidad.</div></div>
+  <div class="termino"><div class="t-n">Broadcast</div><div class="t-d">Enviar un mensaje a múltiples destinatarios al mismo tiempo. En SmartTraffic: el Fanout Exchange hace broadcast del estado a todos los servicios suscritos.</div></div>
+</div>
+
+<h3 class="sub">Tecnología y contenedores</h3>
+<div class="glosario">
+  <div class="termino"><div class="t-n">Contenedor</div><div class="t-d">Proceso aislado del sistema operativo con su propio entorno, librerías y red. Más liviano que una máquina virtual porque comparte el kernel del host. Cada microservicio corre en su contenedor.</div></div>
+  <div class="termino"><div class="t-n">Imagen Docker</div><div class="t-d">La "receta" que describe cómo construir un contenedor: qué SO base, qué librerías instalar, qué archivo ejecutar. Se define en el Dockerfile.</div></div>
+  <div class="termino"><div class="t-n">Docker Compose</div><div class="t-d">Herramienta que levanta múltiples contenedores con un solo archivo y un solo comando. Define qué depende de qué, qué puertos exponer y qué variables de entorno usar.</div></div>
+  <div class="termino"><div class="t-n">depends_on</div><div class="t-d">Le dice a Docker Compose que un servicio debe arrancar después de otro. Solo garantiza el orden de arranque del contenedor, no que el servicio esté listo. Por eso todos los microservicios tienen lógica de reintento.</div></div>
+  <div class="termino"><div class="t-n">WebSocket</div><div class="t-d">Protocolo que mantiene una conexión abierta entre el servidor y el navegador. A diferencia de HTTP normal, el servidor puede enviar datos al browser en cualquier momento sin que este los pida. Así funciona el dashboard en tiempo real.</div></div>
+  <div class="termino"><div class="t-n">Thread / Hilo</div><div class="t-d">Unidad de ejecución dentro de un proceso que corre en paralelo con otros hilos. Varios microservicios usan 2 hilos: uno que escucha mensajes (bloqueante) y otro que envía o hace broadcast simultáneamente.</div></div>
+  <div class="termino"><div class="t-n">daemon=True</div><div class="t-d">Marca un hilo como "demonio". El sistema operativo lo mata automáticamente cuando el proceso principal termina. Sin esto, los hilos secundarios mantendrían el proceso vivo para siempre.</div></div>
+  <div class="termino"><div class="t-n">Callback</div><div class="t-d">Función que se registra para ejecutarse automáticamente cuando ocurre un evento (cuando llega un mensaje). El programador no la llama directamente — el broker la dispara. Es la base del modelo reactivo de RabbitMQ.</div></div>
+  <div class="termino"><div class="t-n">Variable de entorno</div><div class="t-d">Forma de pasar configuración a un programa sin cambiar el código. En SmartTraffic: <code>KAFKA_BROKER=kafka:9092</code> permite que el mismo código funcione en local y en Docker cambiando solo esa variable.</div></div>
+</div>
+
+<hr/>
+<div class="c azul" style="text-align:center">
+  <b class="titulo">SmartTraffic — Proyecto Final Sistemas Distribuidos</b>
+  Repositorio: <code>github.com/andresZam12/SmartTraffic</code> &nbsp;·&nbsp; Mayo 2026
+</div>
+
+</body>
+</html>
