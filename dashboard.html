@@ -3,44 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SmartTraffic — Tráfico en Tiempo Real</title>
+  <title>SmartTraffic — Dashboard</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #080c14;
+      --surface:   #0d1526;
+      --surface2:  #111d35;
+      --border:    #1a3050;
+      --green:     #00e676;
+      --yellow:    #ffb300;
+      --red:       #ff1744;
+      --blue:      #2979ff;
+      --text:      #e2e8f0;
+      --muted:     #4a6080;
+      --g-dim:     rgba(0,230,118,.12);
+      --y-dim:     rgba(255,179,0,.12);
+      --r-dim:     rgba(255,23,68,.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
-      padding: 28px 24px;
+      background-image:
+        linear-gradient(rgba(41,121,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(41,121,255,.025) 1px, transparent 1px);
+      background-size: 44px 44px;
     }
 
-    /* ── Header ── */
-    header {
-      text-align: center;
-      margin-bottom: 36px;
+    /* ── Navbar ── */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(8,12,20,.92);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 16px;
     }
 
-    header h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 1px;
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    header p {
-      color: #64748b;
-      margin-top: 6px;
-      font-size: 0.88rem;
-    }
-
-    /* ── Barra de estado ── */
-    #status-bar {
+    .logo-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2979ff 0%, #00e5ff 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 20px;
-      margin-top: 14px;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      box-shadow: 0 0 14px rgba(41,121,255,.4);
+    }
+
+    .logo-text h1 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .logo-text span {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
@@ -48,278 +90,550 @@
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 6px 14px;
+      padding: 5px 13px;
       border-radius: 20px;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: var(--surface);
+      border: 1px solid var(--border);
     }
 
     .dot {
-      width: 9px; height: 9px;
+      width: 8px; height: 8px;
       border-radius: 50%;
-      background: #475569;
+      background: var(--muted);
       flex-shrink: 0;
     }
-    .dot.verde    { background: #22c55e; animation: pulso 1.4s infinite; }
-    .dot.rojo     { background: #ef4444; }
-    .dot.live     { background: #f59e0b; animation: pulso 0.9s infinite; }
+    .dot.verde { background: var(--green);  animation: pulse 1.4s infinite; }
+    .dot.rojo  { background: var(--red); }
+    .dot.live  { background: var(--yellow); animation: pulse .9s infinite; }
 
-    @keyframes pulso {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.45; transform: scale(0.85); }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .4; }
     }
 
-    /* ── Grid de zonas ── */
-    #zonas-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 18px;
-      max-width: 1200px;
+    /* ── Main layout ── */
+    .main {
+      max-width: 1380px;
       margin: 0 auto;
+      padding: 24px 24px 48px;
     }
 
-    /* ── Tarjeta ── */
-    .zona-card {
-      background: #1e293b;
-      border: 2px solid #334155;
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 22px 20px;
-      transition: border-color 0.5s, box-shadow 0.5s;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color .3s, box-shadow .3s;
+    }
+
+    .stat-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.total  { background: rgba(41,121,255,.15);  box-shadow: 0 0 12px rgba(41,121,255,.1); }
+    .stat-icon.green  { background: rgba(0,230,118,.15);   box-shadow: 0 0 12px rgba(0,230,118,.1); }
+    .stat-icon.yellow { background: rgba(255,179,0,.15);   box-shadow: 0 0 12px rgba(255,179,0,.1); }
+    .stat-icon.red    { background: rgba(255,23,68,.15);   box-shadow: 0 0 12px rgba(255,23,68,.1); }
+
+    .stat-val {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      transition: color .4s;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Section header ── */
+    .sec-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .sec-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+    }
+
+    .sec-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    /* ── Zone grid ── */
+    .zonas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+      gap: 14px;
+      margin-bottom: 26px;
+    }
+
+    /* ── Zone card ── */
+    .zona-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 18px 16px;
       position: relative;
       overflow: hidden;
+      transition: transform .2s, box-shadow .4s, border-color .4s;
+      cursor: default;
     }
 
-    .zona-card::before {
+    .zona-card:hover { transform: translateY(-3px); }
+
+    /* Top accent stripe */
+    .zona-card::after {
       content: '';
       position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity 0.6s;
-      pointer-events: none;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 16px 16px 0 0;
     }
 
-    /* Flash al actualizar */
-    .zona-card.flash::before { opacity: 0.08; animation: flash-in 0.7s forwards; }
-    @keyframes flash-in {
-      0%   { opacity: 0.18; }
-      100% { opacity: 0; }
-    }
-
-    /* Colores por estado */
     .zona-card.DESPEJADA {
-      border-color: #22c55e;
-      box-shadow: 0 0 18px rgba(34,197,94,0.18);
+      border-color: rgba(0,230,118,.45);
+      box-shadow: 0 4px 24px rgba(0,230,118,.07);
     }
-    .zona-card.DESPEJADA::before { background: #22c55e; }
+    .zona-card.DESPEJADA::after    { background: linear-gradient(90deg, #00b248, #00e676); }
 
     .zona-card.MODERADA {
-      border-color: #f59e0b;
-      box-shadow: 0 0 18px rgba(245,158,11,0.18);
+      border-color: rgba(255,179,0,.45);
+      box-shadow: 0 4px 24px rgba(255,179,0,.07);
     }
-    .zona-card.MODERADA::before { background: #f59e0b; }
+    .zona-card.MODERADA::after     { background: linear-gradient(90deg, #ff8f00, #ffb300); }
 
     .zona-card.CONGESTIONADA {
-      border-color: #ef4444;
-      box-shadow: 0 0 22px rgba(239,68,68,0.22);
+      border-color: rgba(255,23,68,.45);
+      box-shadow: 0 4px 24px rgba(255,23,68,.09);
     }
-    .zona-card.CONGESTIONADA::before { background: #ef4444; }
+    .zona-card.CONGESTIONADA::after { background: linear-gradient(90deg, #b71c1c, #ff1744); }
 
-    /* Nombre de zona */
+    @keyframes card-flash {
+      0%   { background: var(--surface2); }
+      100% { background: var(--surface); }
+    }
+    .zona-card.flash { animation: card-flash .5s ease-out; }
+
+    /* Card top row */
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
     .zona-nombre {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #94a3b8;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 10px;
+      letter-spacing: 1.1px;
     }
 
-    /* Estado con icono */
-    .zona-estado {
-      font-size: 1.25rem;
+    .trend {
+      font-size: 0.82rem;
+      line-height: 1;
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.73rem;
       font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .status-pill.DESPEJADA    { background: var(--g-dim); color: var(--green); }
+    .status-pill.MODERADA     { background: var(--y-dim); color: var(--yellow); }
+    .status-pill.CONGESTIONADA { background: var(--r-dim); color: var(--red); }
+
+    /* Gauge */
+    .gauge-wrap {
+      height: 7px;
+      background: rgba(255,255,255,.05);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width .9s cubic-bezier(.4,0,.2,1);
+    }
+    .DESPEJADA    .gauge-fill { background: linear-gradient(90deg, #00b248, #00e676); }
+    .MODERADA     .gauge-fill { background: linear-gradient(90deg, #ff8f00, #ffb300); }
+    .CONGESTIONADA .gauge-fill { background: linear-gradient(90deg, #b71c1c, #ff1744); }
+
+    /* Sparkline */
+    .spark-wrap {
+      height: 38px;
+      margin: 10px 0 8px;
+    }
+    .spark-wrap svg { width: 100%; height: 100%; }
+
+    /* Card footer */
+    .card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-foot span {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .card-foot strong { color: var(--text); }
+
+    /* ── Feed panel ── */
+    .feed-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+    }
+
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 200px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .feed-item {
       display: flex;
       align-items: center;
       gap: 9px;
-      margin-bottom: 14px;
-    }
-    .zona-estado.DESPEJADA    { color: #22c55e; }
-    .zona-estado.MODERADA     { color: #f59e0b; }
-    .zona-estado.CONGESTIONADA { color: #ef4444; }
-
-    /* Barra de vehículos */
-    .barra-wrap {
-      height: 6px;
-      background: #0f172a;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-    .barra-fill {
-      height: 100%;
-      border-radius: 4px;
-      transition: width 0.8s ease;
-    }
-    .DESPEJADA    .barra-fill { background: #22c55e; }
-    .MODERADA     .barra-fill { background: #f59e0b; }
-    .CONGESTIONADA .barra-fill { background: #ef4444; }
-
-    .zona-promedio {
-      font-size: 0.75rem;
-      color: #475569;
-    }
-    .zona-promedio span {
-      color: #94a3b8;
-      font-weight: 600;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.025);
+      font-size: 0.71rem;
+      animation: slide-in .25s ease-out;
     }
 
-    /* ── Mensaje de espera ── */
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .feed-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .feed-dot.DESPEJADA    { background: var(--green); }
+    .feed-dot.MODERADA     { background: var(--yellow); }
+    .feed-dot.CONGESTIONADA { background: var(--red); }
+
+    .feed-time {
+      color: var(--muted);
+      font-size: 0.66rem;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    /* ── Waiting ── */
     #esperando {
       text-align: center;
-      color: #475569;
-      margin-top: 70px;
-      font-size: 0.95rem;
+      padding: 90px 20px;
+      color: var(--muted);
     }
+
     .spinner {
-      width: 38px; height: 38px;
-      border: 3px solid #1e293b;
-      border-top-color: #3b82f6;
+      width: 40px; height: 40px;
+      border: 3px solid var(--surface2);
+      border-top-color: var(--blue);
       border-radius: 50%;
-      animation: spin 0.75s linear infinite;
+      animation: spin .8s linear infinite;
       margin: 0 auto 14px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Footer ── */
-    #footer {
-      text-align: center;
-      color: #334155;
-      font-size: 0.75rem;
-      margin-top: 28px;
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 540px) {
+      .navbar { padding: 12px 16px; }
+      .main   { padding: 14px 14px 40px; }
+      .logo-text span { display: none; }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>🚦 SmartTraffic Dashboard</h1>
-  <p>Sistema de Monitoreo de Tráfico Vehicular Inteligente</p>
-
-  <div id="status-bar">
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon">🚦</div>
+    <div class="logo-text">
+      <h1>SmartTraffic</h1>
+      <span>Monitoreo Vehicular en Tiempo Real</span>
+    </div>
+  </div>
+  <div class="nav-right">
     <div class="badge" id="badge-ws">
       <span class="dot" id="dot-ws"></span>
       <span id="txt-ws">Conectando...</span>
     </div>
     <div class="badge" id="badge-live" style="display:none">
-      <span class="dot live"></span>
-      <span>EN VIVO</span>
-    </div>
-    <div class="badge" id="badge-update" style="display:none">
-      <span id="txt-update">Actualizando cada 5s</span>
+      <span class="dot live"></span>EN VIVO
     </div>
   </div>
-</header>
+</nav>
 
-<div id="esperando">
-  <div class="spinner"></div>
-  <p>Esperando datos del sistema...</p>
+<div class="main">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon total">🌐</div>
+      <div>
+        <div class="stat-val" id="s-total">—</div>
+        <div class="stat-label">Zonas activas</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">🟢</div>
+      <div>
+        <div class="stat-val" id="s-desp" style="color:var(--green)">—</div>
+        <div class="stat-label">Despejadas</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon yellow">🟡</div>
+      <div>
+        <div class="stat-val" id="s-mod" style="color:var(--yellow)">—</div>
+        <div class="stat-label">Moderadas</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">🔴</div>
+      <div>
+        <div class="stat-val" id="s-cong" style="color:var(--red)">—</div>
+        <div class="stat-label">Congestionadas</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="esperando">
+    <div class="spinner"></div>
+    <p>Conectando con el sistema de tráfico...</p>
+  </div>
+
+  <div id="content" style="display:none">
+
+    <div class="sec-head">
+      <span class="sec-title">Zonas monitoreadas</span>
+      <span class="sec-meta" id="txt-update"></span>
+    </div>
+    <div class="zonas-grid" id="zonas-grid"></div>
+
+    <div class="sec-head">
+      <span class="sec-title">Actividad reciente</span>
+    </div>
+    <div class="feed-panel">
+      <div class="feed-list" id="feed-list">
+        <div style="text-align:center;color:var(--muted);font-size:.72rem;padding:12px">
+          Sin eventos aún…
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
-
-<div id="zonas-grid" style="display:none"></div>
-
-<p id="footer"></p>
 
 <script>
   const WS_URL = "ws://localhost:8765";
 
-  const grid        = document.getElementById("zonas-grid");
-  const esperando   = document.getElementById("esperando");
-  const dotWs       = document.getElementById("dot-ws");
-  const txtWs       = document.getElementById("txt-ws");
-  const badgeLive   = document.getElementById("badge-live");
-  const badgeUpdate = document.getElementById("badge-update");
-  const footer      = document.getElementById("footer");
+  const dotWs   = document.getElementById("dot-ws");
+  const txtWs   = document.getElementById("txt-ws");
+  const badgeLive = document.getElementById("badge-live");
+  const txtUpd  = document.getElementById("txt-update");
+  const waiting = document.getElementById("esperando");
+  const content = document.getElementById("content");
+  const grid    = document.getElementById("zonas-grid");
+  const feed    = document.getElementById("feed-list");
 
-  const ICONOS = { DESPEJADA: "🟢", MODERADA: "🟡", CONGESTIONADA: "🔴" };
-  const LABELS = { DESPEJADA: "Despejada", MODERADA: "Moderada", CONGESTIONADA: "Congestionada" };
+  const sTotal = document.getElementById("s-total");
+  const sDesp  = document.getElementById("s-desp");
+  const sMod   = document.getElementById("s-mod");
+  const sCong  = document.getElementById("s-cong");
 
-  let updateCount = 0;
+  const ICONS  = { DESPEJADA:"🟢", MODERADA:"🟡", CONGESTIONADA:"🔴" };
+  const LABELS = { DESPEJADA:"Despejada", MODERADA:"Moderada", CONGESTIONADA:"Congestionada" };
 
+  const historiales = {};   // zona → last 12 promedio values
+  let updates = 0;
+
+  // ── Sparkline SVG ──────────────────────────────────────────────
+  function sparkline(vals, estado) {
+    if (!vals || vals.length < 2) return "<svg></svg>";
+    const W = 200, H = 38;
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const rng = hi - lo || 1;
+    const step = W / (vals.length - 1);
+    const pts = vals.map((v, i) => `${i * step},${H - ((v - lo) / rng) * (H - 5) - 2}`);
+    const color = { DESPEJADA:"#00e676", MODERADA:"#ffb300", CONGESTIONADA:"#ff1744" }[estado] || "#64748b";
+    const area = `0,${H} ${pts.join(" ")} ${W},${H}`;
+    const lastX = (vals.length - 1) * step;
+    const lastY = H - ((vals[vals.length - 1] - lo) / rng) * (H - 5) - 2;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="g${estado}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${color}" stop-opacity=".22"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <polygon points="${area}" fill="url(#g${estado})"/>
+      <polyline points="${pts.join(" ")}" fill="none" stroke="${color}"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${lastX}" cy="${lastY}" r="3" fill="${color}"/>
+    </svg>`;
+  }
+
+  // ── Trend arrow ────────────────────────────────────────────────
+  function trend(vals) {
+    if (!vals || vals.length < 2) return '<span style="color:var(--muted)">—</span>';
+    const d = vals[vals.length - 1] - vals[vals.length - 2];
+    if (d >  3) return '<span style="color:var(--red)">↑</span>';
+    if (d < -3) return '<span style="color:var(--green)">↓</span>';
+    return '<span style="color:var(--muted)">→</span>';
+  }
+
+  // ── Update summary stats ───────────────────────────────────────
+  function updateStats(estado) {
+    const vals = Object.values(estado).map(d => d.estado ?? d);
+    sTotal.textContent = vals.length;
+    sDesp.textContent  = vals.filter(e => e === "DESPEJADA").length;
+    sMod.textContent   = vals.filter(e => e === "MODERADA").length;
+    sCong.textContent  = vals.filter(e => e === "CONGESTIONADA").length;
+  }
+
+  // ── Push to activity feed ──────────────────────────────────────
+  function pushFeed(zona, estado, prom) {
+    const time = new Date().toLocaleTimeString("es-CO");
+    const item = document.createElement("div");
+    item.className = "feed-item";
+    item.innerHTML = `
+      <span class="feed-dot ${estado}"></span>
+      <span><strong>${zona}</strong> cambió a ${LABELS[estado] ?? estado} · ${prom} veh</span>
+      <span class="feed-time">${time}</span>`;
+    const placeholder = feed.querySelector("div[style]");
+    if (placeholder) placeholder.remove();
+    feed.insertBefore(item, feed.firstChild);
+    while (feed.children.length > 40) feed.lastChild.remove();
+  }
+
+  // ── Render / update zone card ──────────────────────────────────
   function actualizarGrid(estado) {
-    esperando.style.display  = "none";
-    grid.style.display       = "grid";
-    badgeLive.style.display  = "inline-flex";
-    badgeUpdate.style.display = "inline-flex";
-
-    updateCount++;
+    waiting.style.display = "none";
+    content.style.display = "block";
+    badgeLive.style.display = "inline-flex";
+    updates++;
+    updateStats(estado);
+    txtUpd.textContent = `Actualización #${updates} · ${new Date().toLocaleTimeString("es-CO")}`;
 
     for (const [zona, datos] of Object.entries(estado)) {
-      const estadoZona   = datos.estado   ?? datos;
-      const promedioZona = datos.promedio ?? null;
-      const pct          = promedioZona !== null ? Math.min(100, Math.round(promedioZona)) : 0;
+      const est  = datos.estado   ?? datos;
+      const prom = datos.promedio ?? null;
+      const pct  = prom !== null ? Math.min(100, Math.round(prom)) : 0;
 
-      const id = `zona-${zona.replace(/\s+/g, "-")}`;
+      if (!historiales[zona]) historiales[zona] = [];
+      if (prom !== null) {
+        historiales[zona].push(prom);
+        if (historiales[zona].length > 12) historiales[zona].shift();
+      }
+
+      const id = `z-${zona.replace(/\s+/g, "-")}`;
       let card = document.getElementById(id);
+      const isNew = !card;
 
-      const esNueva = !card;
-      if (esNueva) {
+      if (isNew) {
         card = document.createElement("div");
         card.id = id;
-        card.innerHTML = `
-          <div class="zona-nombre">${zona}</div>
-          <div class="zona-estado"></div>
-          <div class="barra-wrap"><div class="barra-fill"></div></div>
-          <div class="zona-promedio">Promedio: <span></span> vehículos</div>
-        `;
         grid.appendChild(card);
       }
 
-      const estadoAnterior = card.dataset.estado;
+      const prevEst = card.dataset.estado;
+      const changed = prevEst && prevEst !== est;
+      card.dataset.estado = est;
+      card.className = `zona-card ${est}`;
 
-      // Actualizar contenido
-      card.className = `zona-card ${estadoZona}`;
-      card.dataset.estado = estadoZona;
+      card.innerHTML = `
+        <div class="card-top">
+          <span class="zona-nombre">${zona}</span>
+          <span class="trend">${trend(historiales[zona])}</span>
+        </div>
+        <div class="status-pill ${est}">${ICONS[est] ?? "⚪"} ${LABELS[est] ?? est}</div>
+        <div class="gauge-wrap"><div class="gauge-fill" style="width:${pct}%"></div></div>
+        <div class="spark-wrap">${sparkline(historiales[zona], est)}</div>
+        <div class="card-foot">
+          <span>Promedio <strong>${prom ?? "—"}</strong> veh</span>
+          <span>Carga <strong>${pct}%</strong></span>
+        </div>`;
 
-      const elEstado = card.querySelector(".zona-estado");
-      elEstado.className = `zona-estado ${estadoZona}`;
-      elEstado.textContent = `${ICONOS[estadoZona] ?? "⚪"} ${LABELS[estadoZona] ?? estadoZona}`;
-
-      card.querySelector(".barra-fill").style.width = `${pct}%`;
-
-      if (promedioZona !== null) {
-        card.querySelector(".zona-promedio span").textContent = promedioZona;
-      }
-
-      // Flash visual si el estado cambió (o es nueva tarjeta)
-      if (estadoAnterior !== estadoZona) {
-        card.classList.remove("flash");
-        void card.offsetWidth; // reflow para reiniciar animación
+      if (isNew || changed) {
+        void card.offsetWidth;
         card.classList.add("flash");
+        card.addEventListener("animationend", () => card.classList.remove("flash"), { once: true });
+        if (changed) pushFeed(zona, est, prom ?? 0);
       }
     }
-
-    const hora = new Date().toLocaleTimeString("es-CO");
-    footer.textContent = `Última actualización: ${hora}  ·  Total recibidos: ${updateCount}`;
   }
 
+  // ── WebSocket ──────────────────────────────────────────────────
   function conectar() {
     const ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
       dotWs.className   = "dot verde";
-      txtWs.textContent = "Conectado al servidor";
+      txtWs.textContent = "Conectado";
     };
 
     ws.onmessage = ({ data }) => {
       try { actualizarGrid(JSON.parse(data)); }
-      catch (e) { console.error("[WS] Error JSON:", e); }
+      catch (e) { console.error("[WS]", e); }
     };
 
     ws.onclose = () => {
-      dotWs.className      = "dot rojo";
-      txtWs.textContent    = "Desconectado — reconectando en 5s...";
+      dotWs.className     = "dot rojo";
+      txtWs.textContent   = "Reconectando...";
       badgeLive.style.display = "none";
       setTimeout(conectar, 5000);
     };
