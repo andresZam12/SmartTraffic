@@ -226,8 +226,8 @@
     <span style="font-size:9.5pt; color:#475569">Lee el mismo topic que el processor pero con un grupo diferente. Simula guardar los datos en una base de datos (imprime en consola con partición y offset).</span>
   </li>
   <li>
-    <b>user_dashboard_backend</b> — Puente RabbitMQ → WebSocket<br/>
-    <span style="font-size:9.5pt; color:#475569">Recibe el estado del Fanout Exchange y lo envía en tiempo real al navegador mediante WebSocket.</span>
+    <b>user_dashboard_backend</b> — Puente RabbitMQ → WebSocket + API REST<br/>
+    <span style="font-size:9.5pt; color:#475569">Recibe el estado del Fanout Exchange y lo envía en tiempo real al navegador por WebSocket (puerto 8765). También expone una API REST en el puerto 8766: <code>GET /estado</code> devuelve el estado actual de todas las zonas, <code>GET /sensores</code> retorna las últimas 20 capturas con timestamp, y <code>GET /health</code> verifica que el servicio está vivo.</span>
   </li>
   <li>
     <b>alert_dispatcher</b> — Alertas + respuesta a consultas<br/>
@@ -239,7 +239,7 @@
   </li>
   <li>
     <b>dashboard.html</b> — Interfaz visual en tiempo real<br/>
-    <span style="font-size:9.5pt; color:#475569">Muestra las 5 zonas con colores: verde (DESPEJADA), naranja (MODERADA) y rojo (CONGESTIONADA). Se actualiza solo cada 5 segundos sin recargar la página.</span>
+    <span style="font-size:9.5pt; color:#475569">Muestra las 5 zonas (orden A→E) con colores: verde (DESPEJADA &lt;40 veh), naranja (MODERADA 40–69 veh) y rojo (CONGESTIONADA ≥70 veh). Cada tarjeta incluye una sparkline SVG con el historial de los últimos 12 valores, una flecha de tendencia (↑↓→) y la carga porcentual. Panel de estadísticas globales, feed de actividad reciente y contador regresivo de próxima actualización. Se actualiza automáticamente cada 5 segundos por WebSocket sin recargar la página.</span>
   </li>
   <li>
     <b>Docker Compose</b> — Orquestación completa<br/>
@@ -256,7 +256,7 @@
   <tr><th>Objetivo del enunciado</th><th>Cómo se cumple</th></tr>
   <tr>
     <td><b>Visualización en vivo</b></td>
-    <td>dashboard.html recibe actualizaciones cada 5s por WebSocket y pinta las zonas con colores en tiempo real.</td>
+    <td>dashboard.html recibe actualizaciones cada 5s por WebSocket y pinta las zonas con colores, sparklines y contador regresivo en tiempo real. También disponible como JSON en <code>GET /estado</code> (puerto 8766).</td>
   </tr>
   <tr>
     <td><b>Alertas proactivas</b></td>
@@ -396,6 +396,44 @@
   </div>
 </div>
 
+<h3 class="sub">Criterios exactos de clasificación de densidad</h3>
+<p>El <code>traffic_density_processor</code> clasifica cada zona según el promedio de los últimos 5 valores recibidos (ventana deslizante):</p>
+<table>
+  <tr><th>Estado</th><th>Condición (promedio vehículos)</th><th>Color en el dashboard</th></tr>
+  <tr>
+    <td><b>DESPEJADA</b></td>
+    <td>promedio &lt; 40 veh</td>
+    <td style="color:#16a34a">● Verde</td>
+  </tr>
+  <tr>
+    <td><b>MODERADA</b></td>
+    <td>40 ≤ promedio &lt; 70 veh</td>
+    <td style="color:#d97706">● Naranja/Amarillo</td>
+  </tr>
+  <tr>
+    <td><b>CONGESTIONADA</b></td>
+    <td>promedio ≥ 70 veh</td>
+    <td style="color:#e11d48">● Rojo</td>
+  </tr>
+</table>
+<div class="c gris">
+  <b class="titulo">Por qué se usa ventana deslizante en lugar de promedio acumulado</b>
+  Si se promediara toda la historia, el promedio de valores aleatorios (0–100) converge siempre a ~50, lo que haría que todas las zonas fueran MODERADA perpetuamente. Con <code>deque(maxlen=5)</code> el promedio refleja solo los últimos 5 eventos y puede cambiar de estado rápidamente.
+</div>
+
+<h3 class="sub">API REST de inspección (puerto 8766)</h3>
+<p>Además del WebSocket, el <code>user_dashboard_backend</code> expone tres endpoints HTTP que permiten inspeccionar el sistema como JSON puro:</p>
+<table>
+  <tr><th>Endpoint</th><th>Qué devuelve</th></tr>
+  <tr><td><code>GET /estado</code></td><td>Estado actual de todas las zonas con promedio de vehículos. El mismo dato que recibe el dashboard por WebSocket.</td></tr>
+  <tr><td><code>GET /sensores</code></td><td>Historial de las últimas 20 capturas con su timestamp, útil para ver cómo evolucionó el tráfico.</td></tr>
+  <tr><td><code>GET /health</code></td><td>Verificación rápida: devuelve <code>{"status":"ok","zonas":5}</code> para confirmar que el servicio está vivo.</td></tr>
+</table>
+<pre><code># Cómo consultarlos mientras Docker está corriendo:
+curl http://localhost:8766/estado
+curl http://localhost:8766/sensores
+curl http://localhost:8766/health</code></pre>
+
 <h3 class="sub">¿Qué significa que el dispatcher tenga "estado replicado"?</h3>
 <div class="c naranja">
   El dispatcher no le pregunta al procesador cada vez que recibe una consulta. Tiene su <b>propia copia</b> del estado que actualiza solo cuando llega un broadcast del Fanout. Esto lo hace <b>autónomo</b>: puede responder consultas aunque el procesador esté reiniciando. Este patrón se llama <b>estado replicado</b>.
@@ -469,9 +507,19 @@ docker compose ps
 # Ver los logs en tiempo real
 docker compose logs -f</code></pre>
 
+<h3 class="sub">Puertos expuestos en el sistema</h3>
+<table>
+  <tr><th>Puerto</th><th>Servicio</th><th>Para qué sirve</th></tr>
+  <tr><td><code>9092</code></td><td>Kafka</td><td>Conexión de microservicios al broker de Kafka.</td></tr>
+  <tr><td><code>5672</code></td><td>RabbitMQ AMQP</td><td>Protocolo de mensajería AMQP — usan pika para conectarse.</td></tr>
+  <tr><td><code>15672</code></td><td>RabbitMQ Management</td><td>Panel web: <code>http://localhost:15672</code> usuario <code>guest</code> / contraseña <code>guest</code>. Muestra exchanges, colas, tasas de mensajes.</td></tr>
+  <tr><td><code>8765</code></td><td>Dashboard WebSocket</td><td>Conexión en tiempo real entre el backend y el <code>dashboard.html</code>.</td></tr>
+  <tr><td><code>8766</code></td><td>Dashboard REST API</td><td>Endpoints JSON: <code>/estado</code>, <code>/sensores</code>, <code>/health</code>.</td></tr>
+</table>
+
 <div class="c azul">
   <b class="titulo">Panel de administración de RabbitMQ</b>
-  Entra a <b>http://localhost:15672</b> con usuario <code>guest</code> y contraseña <code>guest</code>. Desde ahí puedes ver en vivo los exchanges, colas, mensajes publicados y consumidos.
+  Entra a <b>http://localhost:15672</b> con usuario <code>guest</code> y contraseña <code>guest</code>. Desde ahí puedes ver en vivo los exchanges, colas activas (<code>traffic_updates</code>, <code>query_traffic_queue</code>, <code>query_answers</code>), mensajes publicados y consumidos por segundo.
 </div>
 
 
@@ -529,6 +577,10 @@ docker compose logs -f</code></pre>
   <div class="termino"><div class="t-n">daemon=True</div><div class="t-d">Marca un hilo como "demonio". El sistema operativo lo mata automáticamente cuando el proceso principal termina. Sin esto, los hilos secundarios mantendrían el proceso vivo para siempre.</div></div>
   <div class="termino"><div class="t-n">Callback</div><div class="t-d">Función que se registra para ejecutarse automáticamente cuando ocurre un evento (cuando llega un mensaje). El programador no la llama directamente — el broker la dispara. Es la base del modelo reactivo de RabbitMQ.</div></div>
   <div class="termino"><div class="t-n">Variable de entorno</div><div class="t-d">Forma de pasar configuración a un programa sin cambiar el código. En SmartTraffic: <code>KAFKA_BROKER=kafka:9092</code> permite que el mismo código funcione en local y en Docker cambiando solo esa variable.</div></div>
+  <div class="termino"><div class="t-n">API REST</div><div class="t-d">Interfaz HTTP que expone datos del sistema como JSON. En SmartTraffic: el <code>user_dashboard_backend</code> expone <code>/estado</code>, <code>/sensores</code> y <code>/health</code> en el puerto 8766 usando únicamente la librería estándar de Python (<code>http.server</code>), sin frameworks externos.</div></div>
+  <div class="termino"><div class="t-n">Sparkline</div><div class="t-d">Mini gráfica compacta que muestra la tendencia de un valor a lo largo del tiempo. En SmartTraffic: cada tarjeta del dashboard dibuja un SVG inline con los últimos 12 promedios de la zona, con área rellena y un punto en el valor más reciente.</div></div>
+  <div class="termino"><div class="t-n">asyncio</div><div class="t-d">Módulo de Python para programación asíncrona. Permite manejar múltiples tareas concurrentes en un solo hilo usando <code>async/await</code>. El <code>user_dashboard_backend</code> lo usa para manejar múltiples clientes WebSocket simultáneamente.</div></div>
+  <div class="termino"><div class="t-n">run_coroutine_threadsafe</div><div class="t-d">Función que permite ejecutar una corutina asyncio desde un hilo diferente. En SmartTraffic: el hilo de pika (bloqueante) la usa para enviar el broadcast al loop de asyncio donde viven los WebSockets, sin conflictos de concurrencia.</div></div>
 </div>
 
 <hr/>
