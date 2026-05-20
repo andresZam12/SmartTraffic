@@ -265,10 +265,46 @@
       color: var(--muted);
     }
 
+    /* ── Threshold legend ────────────────────────────── */
+    .threshold-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+      padding: 10px 16px;
+      background: var(--surf);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .thr-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-right: 4px;
+    }
+
+    .thr-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .thr-item.desp { background: var(--g-dim); color: var(--green); }
+    .thr-item.mod  { background: var(--y-dim); color: var(--yellow); }
+    .thr-item.cong { background: var(--r-dim); color: var(--red); }
+
+    .thr-sep { color: var(--border); font-size: 0.9rem; }
+
     /* ── Zone grid — una fila ─────────────────────────── */
     .zonas-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      /* columnas se fijan por JS según cantidad de zonas */
+      grid-template-columns: repeat(5, 1fr);
       gap: 14px;
       margin-bottom: 28px;
     }
@@ -461,7 +497,7 @@
 
 <!-- ── Hero header ── -->
 <div class="hero">
-  <h1 class="hero-title">🚦 SmartTraffic Dashboard</h1>
+  <h1 class="hero-title"> SmartTraffic</h1>
   <p class="hero-sub">Sistema distribuido de monitoreo vehicular en tiempo real · Kafka + RabbitMQ + WebSocket</p>
   <div class="hero-badges">
     <span class="hero-tag">⚡ Kafka</span>
@@ -524,6 +560,16 @@
       <span class="sec-title">Zonas monitoreadas</span>
       <span class="sec-meta" id="txt-update"></span>
     </div>
+
+    <div class="threshold-legend">
+      <span class="thr-label">Criterios:</span>
+      <span class="thr-item desp">🟢 Despejada — prom. &lt; 40 veh</span>
+      <span class="thr-sep">|</span>
+      <span class="thr-item mod">🟡 Moderada — prom. 40–69 veh</span>
+      <span class="thr-sep">|</span>
+      <span class="thr-item cong">🔴 Congestionada — prom. ≥ 70 veh</span>
+    </div>
+
     <div class="zonas-grid" id="zonas-grid"></div>
 
     <div class="sec-head">
@@ -653,7 +699,16 @@
     txtUpd.textContent = `Actualización #${updates} · ${new Date().toLocaleTimeString("es-CO")}`;
     startCountdown();
 
-    for (const [zona, datos] of Object.entries(estado)) {
+    // Ajusta columnas exactas para que todas quepan en una fila sin wrapping
+    const numZonas = Object.keys(estado).length;
+    if (numZonas > 0) {
+      grid.style.gridTemplateColumns = `repeat(${numZonas}, 1fr)`;
+    }
+
+    // Ordenar zonas alfabéticamente (Zona A → Zona B → ... → Zona E)
+    const entradasOrdenadas = Object.entries(estado).sort(([a], [b]) => a.localeCompare(b));
+
+    for (const [zona, datos] of entradasOrdenadas) {
       const est  = datos.estado   ?? datos;
       const prom = datos.promedio ?? null;
       const pct  = prom !== null ? Math.min(100, Math.round(prom)) : 0;
