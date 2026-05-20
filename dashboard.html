@@ -6,19 +6,19 @@
   <title>SmartTraffic — Dashboard</title>
   <style>
     :root {
-      --bg:        #080c14;
-      --surface:   #0d1526;
-      --surface2:  #111d35;
-      --border:    #1a3050;
-      --green:     #00e676;
-      --yellow:    #ffb300;
-      --red:       #ff1744;
-      --blue:      #2979ff;
-      --text:      #e2e8f0;
-      --muted:     #4a6080;
-      --g-dim:     rgba(0,230,118,.12);
-      --y-dim:     rgba(255,179,0,.12);
-      --r-dim:     rgba(255,23,68,.12);
+      --bg:      #080c14;
+      --surf:    #0d1526;
+      --surf2:   #111d35;
+      --border:  #1a3050;
+      --green:   #00e676;
+      --yellow:  #ffb300;
+      --red:     #ff1744;
+      --blue:    #2979ff;
+      --text:    #e2e8f0;
+      --muted:   #4a6080;
+      --g-dim:   rgba(0,230,118,.13);
+      --y-dim:   rgba(255,179,0,.13);
+      --r-dim:   rgba(255,23,68,.13);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,13 +34,13 @@
       background-size: 44px 44px;
     }
 
-    /* ── Navbar ── */
+    /* ── Navbar ─────────────────────────────────────── */
     .navbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 18px 36px;
-      background: rgba(8,12,20,.92);
+      padding: 14px 36px;
+      background: rgba(8,12,20,.93);
       backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border);
       position: sticky;
@@ -52,30 +52,28 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
     .logo-icon {
-      width: 48px; height: 48px;
-      border-radius: 13px;
-      background: linear-gradient(135deg, #2979ff 0%, #00e5ff 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
+      width: 40px; height: 40px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #2979ff, #00e5ff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 0 16px rgba(41,121,255,.4);
       flex-shrink: 0;
-      box-shadow: 0 0 18px rgba(41,121,255,.4);
     }
 
-    .logo-text h1 {
-      font-size: 1.4rem;
+    .logo-text h2 {
+      font-size: 1.05rem;
       font-weight: 700;
       color: #fff;
       line-height: 1.2;
     }
 
-    .logo-text span {
-      font-size: 0.82rem;
+    .logo-text small {
+      font-size: 0.72rem;
       color: var(--muted);
     }
 
@@ -89,13 +87,14 @@
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 7px 16px;
+      gap: 7px;
+      padding: 6px 14px;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      background: var(--surface);
+      background: var(--surf);
       border: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     .dot {
@@ -104,79 +103,157 @@
       background: var(--muted);
       flex-shrink: 0;
     }
-    .dot.verde { background: var(--green);  animation: pulse 1.4s infinite; }
+    .dot.verde { background: var(--green);  animation: blink 1.4s infinite; }
     .dot.rojo  { background: var(--red); }
-    .dot.live  { background: var(--yellow); animation: pulse .9s infinite; }
+    .dot.live  { background: var(--yellow); animation: blink .9s infinite; }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: .4; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    /* ── Hero header ──────────────────────────────────── */
+    .hero {
+      text-align: center;
+      padding: 52px 24px 44px;
+      position: relative;
     }
 
-    /* ── Main layout ── */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(41,121,255,.08), transparent);
+      pointer-events: none;
+    }
+
+    .hero-title {
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 30%, #7eb8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .hero-sub {
+      font-size: clamp(0.95rem, 2vw, 1.15rem);
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+
+    .hero-badges {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--surf);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* Countdown ring badge */
+    .countdown-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: rgba(41,121,255,.1);
+      border: 1px solid rgba(41,121,255,.35);
+      color: #7eb8ff;
+    }
+
+    .cd-ring {
+      width: 22px; height: 22px;
+      flex-shrink: 0;
+    }
+
+    .cd-ring circle {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset .9s linear;
+    }
+
+    .cd-ring .bg  { stroke: rgba(41,121,255,.2); }
+    .cd-ring .fg  { stroke: #2979ff; transform-origin: center; transform: rotate(-90deg); }
+
+    /* ── Main layout ──────────────────────────────────── */
     .main {
       max-width: 1500px;
       margin: 0 auto;
-      padding: 30px 36px 60px;
+      padding: 0 36px 60px;
     }
 
-    /* ── Stats row ── */
+    /* ── Stats row ────────────────────────────────────── */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
+      gap: 16px;
       margin-bottom: 32px;
     }
 
     .stat-card {
-      background: var(--surface);
+      background: var(--surf);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 24px 26px;
+      padding: 22px 24px;
       display: flex;
       align-items: center;
-      gap: 18px;
-      transition: border-color .3s, box-shadow .3s;
+      gap: 16px;
     }
 
     .stat-icon {
-      width: 56px; height: 56px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
+      width: 52px; height: 52px;
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
       flex-shrink: 0;
     }
-    .stat-icon.total  { background: rgba(41,121,255,.15);  box-shadow: 0 0 12px rgba(41,121,255,.1); }
-    .stat-icon.green  { background: rgba(0,230,118,.15);   box-shadow: 0 0 12px rgba(0,230,118,.1); }
-    .stat-icon.yellow { background: rgba(255,179,0,.15);   box-shadow: 0 0 12px rgba(255,179,0,.1); }
-    .stat-icon.red    { background: rgba(255,23,68,.15);   box-shadow: 0 0 12px rgba(255,23,68,.1); }
+    .stat-icon.total  { background: rgba(41,121,255,.15); box-shadow: 0 0 12px rgba(41,121,255,.1); }
+    .stat-icon.green  { background: rgba(0,230,118,.15);  box-shadow: 0 0 12px rgba(0,230,118,.1); }
+    .stat-icon.yellow { background: rgba(255,179,0,.15);  box-shadow: 0 0 12px rgba(255,179,0,.1); }
+    .stat-icon.red    { background: rgba(255,23,68,.15);  box-shadow: 0 0 12px rgba(255,23,68,.1); }
 
     .stat-val {
-      font-size: 2.6rem;
+      font-size: 2.4rem;
       font-weight: 800;
       color: #fff;
       line-height: 1;
-      transition: color .4s;
     }
 
     .stat-label {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--muted);
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
-    /* ── Section header ── */
+    /* ── Section header ───────────────────────────────── */
     .sec-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .sec-title {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: 700;
       color: var(--muted);
       text-transform: uppercase;
@@ -184,24 +261,24 @@
     }
 
     .sec-meta {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       color: var(--muted);
     }
 
-    /* ── Zone grid ── */
+    /* ── Zone grid — una fila ─────────────────────────── */
     .zonas-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 18px;
-      margin-bottom: 32px;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
     }
 
-    /* ── Zone card ── */
+    /* ── Zone card ────────────────────────────────────── */
     .zona-card {
-      background: var(--surface);
+      background: var(--surf);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 24px 24px 20px;
+      border-radius: 16px;
+      padding: 18px 16px 14px;
       position: relative;
       overflow: hidden;
       transition: transform .2s, box-shadow .4s, border-color .4s;
@@ -210,7 +287,6 @@
 
     .zona-card:hover { transform: translateY(-3px); }
 
-    /* Top accent stripe */
     .zona-card::after {
       content: '';
       position: absolute;
@@ -219,69 +295,50 @@
       border-radius: 16px 16px 0 0;
     }
 
-    .zona-card.DESPEJADA {
-      border-color: rgba(0,230,118,.45);
-      box-shadow: 0 4px 24px rgba(0,230,118,.07);
-    }
+    .zona-card.DESPEJADA     { border-color: rgba(0,230,118,.45);  box-shadow: 0 4px 20px rgba(0,230,118,.06); }
+    .zona-card.MODERADA      { border-color: rgba(255,179,0,.45);  box-shadow: 0 4px 20px rgba(255,179,0,.06); }
+    .zona-card.CONGESTIONADA { border-color: rgba(255,23,68,.45);  box-shadow: 0 4px 20px rgba(255,23,68,.08); }
+
     .zona-card.DESPEJADA::after    { background: linear-gradient(90deg, #00b248, #00e676); }
-
-    .zona-card.MODERADA {
-      border-color: rgba(255,179,0,.45);
-      box-shadow: 0 4px 24px rgba(255,179,0,.07);
-    }
     .zona-card.MODERADA::after     { background: linear-gradient(90deg, #ff8f00, #ffb300); }
-
-    .zona-card.CONGESTIONADA {
-      border-color: rgba(255,23,68,.45);
-      box-shadow: 0 4px 24px rgba(255,23,68,.09);
-    }
     .zona-card.CONGESTIONADA::after { background: linear-gradient(90deg, #b71c1c, #ff1744); }
 
-    @keyframes card-flash {
-      0%   { background: var(--surface2); }
-      100% { background: var(--surface); }
-    }
+    @keyframes card-flash { 0%{background:var(--surf2)} 100%{background:var(--surf)} }
     .zona-card.flash { animation: card-flash .5s ease-out; }
 
-    /* Card top row */
     .card-top {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .zona-nombre {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 700;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 1.1px;
+      letter-spacing: 1px;
     }
 
-    .trend {
-      font-size: 1.1rem;
-      line-height: 1;
-    }
+    .trend { font-size: 1rem; line-height: 1; }
 
-    /* Status pill */
     .status-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 14px;
+      gap: 5px;
+      padding: 4px 11px;
       border-radius: 20px;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     .status-pill.DESPEJADA    { background: var(--g-dim); color: var(--green); }
     .status-pill.MODERADA     { background: var(--y-dim); color: var(--yellow); }
     .status-pill.CONGESTIONADA { background: var(--r-dim); color: var(--red); }
 
-    /* Gauge */
     .gauge-wrap {
-      height: 10px;
+      height: 8px;
       background: rgba(255,255,255,.05);
       border-radius: 6px;
       overflow: hidden;
@@ -297,40 +354,34 @@
     .MODERADA     .gauge-fill { background: linear-gradient(90deg, #ff8f00, #ffb300); }
     .CONGESTIONADA .gauge-fill { background: linear-gradient(90deg, #b71c1c, #ff1744); }
 
-    /* Sparkline */
     .spark-wrap {
-      height: 54px;
-      margin: 14px 0 10px;
+      height: 44px;
+      margin: 10px 0 8px;
     }
     .spark-wrap svg { width: 100%; height: 100%; }
 
-    /* Card footer */
     .card-foot {
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .card-foot span {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-
+    .card-foot span { font-size: 0.75rem; color: var(--muted); }
     .card-foot strong { color: var(--text); }
 
-    /* ── Feed panel ── */
+    /* ── Feed ─────────────────────────────────────────── */
     .feed-panel {
-      background: var(--surface);
+      background: var(--surf);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 22px 24px;
+      padding: 20px 22px;
     }
 
     .feed-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-height: 260px;
+      gap: 7px;
+      max-height: 220px;
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: var(--border) transparent;
@@ -339,45 +390,33 @@
     .feed-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 10px;
+      gap: 9px;
+      padding: 9px 12px;
+      border-radius: 9px;
       background: rgba(255,255,255,.025);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       animation: slide-in .25s ease-out;
     }
 
-    @keyframes slide-in {
-      from { opacity: 0; transform: translateX(-8px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
+    @keyframes slide-in { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
 
-    .feed-dot {
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .feed-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .feed-dot.DESPEJADA    { background: var(--green); }
     .feed-dot.MODERADA     { background: var(--yellow); }
     .feed-dot.CONGESTIONADA { background: var(--red); }
 
-    .feed-time {
-      color: var(--muted);
-      font-size: 0.78rem;
-      margin-left: auto;
-      flex-shrink: 0;
-    }
+    .feed-time { color: var(--muted); font-size: 0.72rem; margin-left: auto; flex-shrink: 0; }
 
-    /* ── Waiting ── */
+    /* ── Waiting ──────────────────────────────────────── */
     #esperando {
       text-align: center;
-      padding: 90px 20px;
+      padding: 70px 20px;
       color: var(--muted);
     }
 
     .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--surface2);
+      width: 38px; height: 38px;
+      border: 3px solid var(--surf2);
       border-top-color: var(--blue);
       border-radius: 50%;
       animation: spin .8s linear infinite;
@@ -385,27 +424,28 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Responsive ── */
+    /* ── Responsive ───────────────────────────────────── */
     @media (max-width: 900px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); }
     }
 
-    @media (max-width: 540px) {
-      .navbar { padding: 14px 18px; }
-      .main   { padding: 16px 16px 40px; }
-      .logo-text span { display: none; }
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width: 600px) {
+      .navbar, .main { padding-left: 16px; padding-right: 16px; }
+      .hero { padding: 36px 16px 30px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .logo-text small { display: none; }
     }
   </style>
 </head>
 <body>
 
+<!-- ── Navbar ── -->
 <nav class="navbar">
   <div class="logo">
     <div class="logo-icon">🚦</div>
     <div class="logo-text">
-      <h1>SmartTraffic</h1>
-      <span>Monitoreo Vehicular en Tiempo Real</span>
+      <h2>SmartTraffic</h2>
+      <small>Monitoreo Vehicular</small>
     </div>
   </div>
   <div class="nav-right">
@@ -419,6 +459,27 @@
   </div>
 </nav>
 
+<!-- ── Hero header ── -->
+<div class="hero">
+  <h1 class="hero-title">🚦 SmartTraffic Dashboard</h1>
+  <p class="hero-sub">Sistema distribuido de monitoreo vehicular en tiempo real · Kafka + RabbitMQ + WebSocket</p>
+  <div class="hero-badges">
+    <span class="hero-tag">⚡ Kafka</span>
+    <span class="hero-tag">🐇 RabbitMQ</span>
+    <span class="hero-tag">🔌 WebSocket</span>
+    <span class="hero-tag">🐳 Docker</span>
+    <div class="countdown-badge" id="countdown-badge" style="display:none">
+      <svg class="cd-ring" viewBox="0 0 22 22">
+        <circle class="bg" cx="11" cy="11" r="8"/>
+        <circle class="fg" id="cd-arc" cx="11" cy="11" r="8"
+                stroke-dasharray="50.27" stroke-dashoffset="0"/>
+      </svg>
+      <span id="cd-txt">Próxima actualización en <strong id="cd-n">5</strong>s</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main ── -->
 <div class="main">
 
   <div class="stats-row">
@@ -470,7 +531,7 @@
     </div>
     <div class="feed-panel">
       <div class="feed-list" id="feed-list">
-        <div style="text-align:center;color:var(--muted);font-size:.72rem;padding:12px">
+        <div style="text-align:center;color:var(--muted);font-size:.78rem;padding:14px">
           Sin eventos aún…
         </div>
       </div>
@@ -482,62 +543,86 @@
 <script>
   const WS_URL = "ws://localhost:8765";
 
-  const dotWs   = document.getElementById("dot-ws");
-  const txtWs   = document.getElementById("txt-ws");
+  const dotWs    = document.getElementById("dot-ws");
+  const txtWs    = document.getElementById("txt-ws");
   const badgeLive = document.getElementById("badge-live");
-  const txtUpd  = document.getElementById("txt-update");
-  const waiting = document.getElementById("esperando");
-  const content = document.getElementById("content");
-  const grid    = document.getElementById("zonas-grid");
-  const feed    = document.getElementById("feed-list");
+  const txtUpd   = document.getElementById("txt-update");
+  const waiting  = document.getElementById("esperando");
+  const content  = document.getElementById("content");
+  const grid     = document.getElementById("zonas-grid");
+  const feed     = document.getElementById("feed-list");
 
   const sTotal = document.getElementById("s-total");
   const sDesp  = document.getElementById("s-desp");
   const sMod   = document.getElementById("s-mod");
   const sCong  = document.getElementById("s-cong");
 
+  const cdBadge = document.getElementById("countdown-badge");
+  const cdArc   = document.getElementById("cd-arc");
+  const cdN     = document.getElementById("cd-n");
+
   const ICONS  = { DESPEJADA:"🟢", MODERADA:"🟡", CONGESTIONADA:"🔴" };
   const LABELS = { DESPEJADA:"Despejada", MODERADA:"Moderada", CONGESTIONADA:"Congestionada" };
 
-  const historiales = {};   // zona → last 12 promedio values
+  const historiales = {};
   let updates = 0;
 
-  // ── Sparkline SVG ──────────────────────────────────────────────
+  // ── Countdown timer ───────────────────────────────────────────
+  const CD_TOTAL   = 5;           // segundos entre broadcasts
+  const CIRCUM     = 50.27;       // 2π × r=8
+  let cdValue      = CD_TOTAL;
+  let cdInterval   = null;
+
+  function startCountdown() {
+    cdBadge.style.display = "inline-flex";
+    cdValue = CD_TOTAL;
+    cdN.textContent = cdValue;
+    cdArc.style.strokeDashoffset = 0;
+
+    clearInterval(cdInterval);
+    cdInterval = setInterval(() => {
+      cdValue = Math.max(0, cdValue - 1);
+      cdN.textContent = cdValue;
+      // dashoffset aumenta linealmente hasta CIRCUM cuando llega a 0
+      cdArc.style.strokeDashoffset = ((CD_TOTAL - cdValue) / CD_TOTAL) * CIRCUM;
+    }, 1000);
+  }
+
+  // ── Sparkline SVG ─────────────────────────────────────────────
   function sparkline(vals, estado) {
     if (!vals || vals.length < 2) return "<svg></svg>";
-    const W = 200, H = 38;
+    const W = 200, H = 44;
     const lo = Math.min(...vals), hi = Math.max(...vals);
     const rng = hi - lo || 1;
     const step = W / (vals.length - 1);
-    const pts = vals.map((v, i) => `${i * step},${H - ((v - lo) / rng) * (H - 5) - 2}`);
-    const color = { DESPEJADA:"#00e676", MODERADA:"#ffb300", CONGESTIONADA:"#ff1744" }[estado] || "#64748b";
+    const pts = vals.map((v, i) => `${i*step},${H - ((v-lo)/rng)*(H-5) - 2}`);
+    const color = {DESPEJADA:"#00e676", MODERADA:"#ffb300", CONGESTIONADA:"#ff1744"}[estado] || "#64748b";
     const area = `0,${H} ${pts.join(" ")} ${W},${H}`;
-    const lastX = (vals.length - 1) * step;
-    const lastY = H - ((vals[vals.length - 1] - lo) / rng) * (H - 5) - 2;
+    const lx = (vals.length-1)*step;
+    const ly = H - ((vals[vals.length-1]-lo)/rng)*(H-5) - 2;
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
       <defs>
         <linearGradient id="g${estado}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="${color}" stop-opacity=".22"/>
+          <stop offset="0%" stop-color="${color}" stop-opacity=".2"/>
           <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
         </linearGradient>
       </defs>
       <polygon points="${area}" fill="url(#g${estado})"/>
       <polyline points="${pts.join(" ")}" fill="none" stroke="${color}"
                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="${lastX}" cy="${lastY}" r="3" fill="${color}"/>
+      <circle cx="${lx}" cy="${ly}" r="3" fill="${color}"/>
     </svg>`;
   }
 
-  // ── Trend arrow ────────────────────────────────────────────────
+  // ── Trend arrow ───────────────────────────────────────────────
   function trend(vals) {
     if (!vals || vals.length < 2) return '<span style="color:var(--muted)">—</span>';
-    const d = vals[vals.length - 1] - vals[vals.length - 2];
+    const d = vals[vals.length-1] - vals[vals.length-2];
     if (d >  3) return '<span style="color:var(--red)">↑</span>';
     if (d < -3) return '<span style="color:var(--green)">↓</span>';
     return '<span style="color:var(--muted)">→</span>';
   }
 
-  // ── Update summary stats ───────────────────────────────────────
   function updateStats(estado) {
     const vals = Object.values(estado).map(d => d.estado ?? d);
     sTotal.textContent = vals.length;
@@ -546,29 +631,27 @@
     sCong.textContent  = vals.filter(e => e === "CONGESTIONADA").length;
   }
 
-  // ── Push to activity feed ──────────────────────────────────────
   function pushFeed(zona, estado, prom) {
     const time = new Date().toLocaleTimeString("es-CO");
     const item = document.createElement("div");
     item.className = "feed-item";
     item.innerHTML = `
       <span class="feed-dot ${estado}"></span>
-      <span><strong>${zona}</strong> cambió a ${LABELS[estado] ?? estado} · ${prom} veh</span>
+      <span><strong>${zona}</strong> → ${LABELS[estado] ?? estado} · ${prom} veh</span>
       <span class="feed-time">${time}</span>`;
-    const placeholder = feed.querySelector("div[style]");
-    if (placeholder) placeholder.remove();
+    feed.querySelector("div[style]")?.remove();
     feed.insertBefore(item, feed.firstChild);
     while (feed.children.length > 40) feed.lastChild.remove();
   }
 
-  // ── Render / update zone card ──────────────────────────────────
   function actualizarGrid(estado) {
-    waiting.style.display = "none";
-    content.style.display = "block";
+    waiting.style.display   = "none";
+    content.style.display   = "block";
     badgeLive.style.display = "inline-flex";
     updates++;
     updateStats(estado);
     txtUpd.textContent = `Actualización #${updates} · ${new Date().toLocaleTimeString("es-CO")}`;
+    startCountdown();
 
     for (const [zona, datos] of Object.entries(estado)) {
       const est  = datos.estado   ?? datos;
@@ -605,7 +688,7 @@
         <div class="gauge-wrap"><div class="gauge-fill" style="width:${pct}%"></div></div>
         <div class="spark-wrap">${sparkline(historiales[zona], est)}</div>
         <div class="card-foot">
-          <span>Promedio <strong>${prom ?? "—"}</strong> veh</span>
+          <span>Prom. <strong>${prom ?? "—"}</strong> veh</span>
           <span>Carga <strong>${pct}%</strong></span>
         </div>`;
 
@@ -618,7 +701,7 @@
     }
   }
 
-  // ── WebSocket ──────────────────────────────────────────────────
+  // ── WebSocket ─────────────────────────────────────────────────
   function conectar() {
     const ws = new WebSocket(WS_URL);
 
@@ -636,6 +719,8 @@
       dotWs.className     = "dot rojo";
       txtWs.textContent   = "Reconectando...";
       badgeLive.style.display = "none";
+      clearInterval(cdInterval);
+      cdBadge.style.display = "none";
       setTimeout(conectar, 5000);
     };
 
