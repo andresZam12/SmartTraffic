@@ -48,15 +48,24 @@ traffic_archiver ◄── (Kafka: raw_traffic_data, grupo independiente)
 # 1. Clonar o descargar el proyecto
 cd smarttraffic
 
-# 2. Levantar todos los servicios
-docker-compose up --build
+# 2. Construir las imágenes y levantar los 9 contenedores
+docker compose up -d --build
 
-# 3. Abrir el dashboard (abrir directamente en el navegador)
+# 3. Verificar que todos estén corriendo
+docker compose ps
+
+# 4. Abrir el dashboard en el navegador
 #    Doble clic en: dashboard.html
-#    O abrir desde el navegador: file:///ruta/al/proyecto/dashboard.html
+#    Muestra las 5 zonas en tiempo real con sparklines y contador de actualización.
 
-# 4. Ver panel de RabbitMQ (opcional)
+# 5. Inspeccionar datos como JSON (API REST)
+#    http://localhost:8766/estado    → estado actual de todas las zonas
+#    http://localhost:8766/sensores  → últimas 20 capturas con timestamp
+#    http://localhost:8766/health    → verificación del servicio
+
+# 6. Panel de administración de RabbitMQ
 #    http://localhost:15672  →  usuario: guest  /  contraseña: guest
+#    Aquí puedes ver exchanges, colas y tasas de mensajes en tiempo real.
 ```
 
 ### Ver logs por servicio

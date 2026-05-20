@@ -1,88 +1,108 @@
+# Docker Compose v3.8 — orquesta los 9 contenedores del sistema SmartTraffic.
+# Un solo archivo define toda la infraestructura: red, dependencias, variables y puertos.
+# Comando para levantar: docker compose up -d
+# Comando para detener:  docker compose down
 version: "3.8"
 
 services:
 
-  # ─────────────────────────────────────────────
-  # INFRAESTRUCTURA: Zookeeper (requerido por Kafka)
-  # ─────────────────────────────────────────────
+  # ── CAPA 1: INFRAESTRUCTURA ────────────────────────────────────────────────
+  # Estos tres servicios no tienen código propio — usan imágenes públicas de Docker Hub.
+  # Deben arrancar ANTES que cualquier microservicio.
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
+    # Zookeeper es el coordinador de clúster requerido por Kafka (versión 7.4).
+    # Gestiona qué brokers están activos y qué particiones tiene cada uno.
+    # Kafka moderno (KRaft) ya no lo necesita, pero esta versión sí.
     container_name: zookeeper
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_CLIENT_PORT: 2181       # puerto donde Kafka se conecta a Zookeeper
+      ZOOKEEPER_TICK_TIME: 2000         # intervalo de heartbeat en ms (detecta nodos caídos)
     networks:
-      - smarttraffic_net
+      - smarttraffic_net                # red interna — los servicios se ven por nombre
 
-  # ─────────────────────────────────────────────
-  # INFRAESTRUCTURA: Apache Kafka
-  # ─────────────────────────────────────────────
   kafka:
     image: confluentinc/cp-kafka:7.4.0
+    # Apache Kafka: el broker de eventos del sistema.
+    # Recibe los datos brutos de los sensores y los almacena en el topic raw_traffic_data.
+    # Los consumer groups leen de ese topic de forma independiente.
     container_name: kafka
     depends_on:
-      - zookeeper
+      - zookeeper                       # kafka arranca DESPUÉS de zookeeper
+                                        # (depends_on garantiza orden de contenedor, no de servicio)
     ports:
-      - "9092:9092"
+      - "9092:9092"                     # formato host:contenedor — expone Kafka al exterior
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_BROKER_ID: 1                            # ID único de este broker en el clúster
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181       # Docker DNS resuelve "zookeeper" al IP del contenedor
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092  # dirección que Kafka anuncia a sus clientes
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1     # factor de replicación 1 (solo hay 1 broker)
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"       # crea raw_traffic_data automáticamente al primer mensaje
     networks:
       - smarttraffic_net
 
-  # ─────────────────────────────────────────────
-  # INFRAESTRUCTURA: RabbitMQ con panel de administración
-  # ─────────────────────────────────────────────
   rabbitmq:
     image: rabbitmq:3.12-management
+    # RabbitMQ: el broker de mensajes del sistema.
+    # Gestiona los tres patrones de mensajería: Fanout Exchange, Work Queue y Topic Exchange.
+    # La variante "-management" incluye el panel web de administración.
     container_name: rabbitmq
     ports:
-      - "5672:5672"    # puerto AMQP (mensajería)
-      - "15672:15672"  # panel web: http://localhost:15672 (guest/guest)
+      - "5672:5672"    # protocolo AMQP — los microservicios usan pika para conectarse aquí
+      - "15672:15672"  # panel web de administración: http://localhost:15672 (guest/guest)
     environment:
-      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_USER: guest      # credenciales por defecto del panel y de pika
       RABBITMQ_DEFAULT_PASS: guest
     networks:
       - smarttraffic_net
 
-  # ─────────────────────────────────────────────
-  # MICROSERVICIO 1: Simulador de sensores (Productor Kafka)
-  # ─────────────────────────────────────────────
+  # ── CAPA 2: MICROSERVICIOS ─────────────────────────────────────────────────
+  # Cada microservicio se construye desde su propio Dockerfile local (build: ./carpeta).
+  # Todos tienen restart: on-failure para tolerancia a fallos: si el proceso muere con
+  # código de error, Docker lo reinicia automáticamente sin intervención humana.
+  # Todos usan variables de entorno para la configuración: el mismo código funciona
+  # en local (localhost) y en Docker (nombre del servicio) cambiando solo esas variables.
+
   traffic_sensor_simulator:
     build: ./traffic_sensor_simulator
+    # Microservicio 1 — Productor Kafka.
+    # Genera un evento aleatorio {zone_id, vehicle_count} cada segundo
+    # y lo publica en el topic raw_traffic_data usando zone_id como key
+    # (garantiza que todos los datos de una zona vayan a la misma partición).
     container_name: sensor_simulator
     depends_on:
-      - kafka
+      - kafka                           # necesita Kafka para publicar eventos
     environment:
-      KAFKA_BROKER: kafka:9092
+      KAFKA_BROKER: kafka:9092          # el microservicio lee esta variable con os.environ.get()
     networks:
       - smarttraffic_net
-    restart: on-failure
+    restart: on-failure                 # se reinicia si Kafka aún no está listo al arrancar
 
-  # ─────────────────────────────────────────────
-  # MICROSERVICIO 2: Procesador de densidad (Consumer Kafka / Producer RabbitMQ)
-  # ─────────────────────────────────────────────
   traffic_density_processor:
     build: ./traffic_density_processor
+    # Microservicio 2 — El cerebro del sistema. Consumer Kafka + Producer RabbitMQ.
+    # Consume raw_traffic_data (grupo: density_processor_group), calcula densidad
+    # con ventana deslizante de 5 valores, y cada 5s hace broadcast del estado
+    # completo al Fanout Exchange de RabbitMQ.
+    # Implementa el patrón KTable: zone_states siempre tiene el estado más reciente.
     container_name: density_processor
     depends_on:
       - kafka
-      - rabbitmq
+      - rabbitmq                        # necesita ambos: lee de Kafka y publica en RabbitMQ
     environment:
       KAFKA_BROKER: kafka:9092
-      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_HOST: rabbitmq           # pika se conecta a rabbitmq:5672 internamente
     networks:
       - smarttraffic_net
     restart: on-failure
 
-  # ─────────────────────────────────────────────
-  # MICROSERVICIO 3: Archivador (Consumer Kafka)
-  # ─────────────────────────────────────────────
   traffic_archiver:
     build: ./traffic_archiver
+    # Microservicio 3 — Consumer Kafka independiente.
+    # Lee el mismo topic raw_traffic_data con su PROPIO consumer group (archiver_group).
+    # Dos grupos distintos = cada uno recibe TODOS los mensajes sin quitárselos entre sí.
+    # Simula un INSERT a base de datos imprimiendo partición y offset de cada mensaje.
     container_name: traffic_archiver
     depends_on:
       - kafka
@@ -92,28 +112,31 @@ services:
       - smarttraffic_net
     restart: on-failure
 
-  # ─────────────────────────────────────────────
-  # MICROSERVICIO 4: Backend del dashboard (Consumer RabbitMQ / WebSocket)
-  # ─────────────────────────────────────────────
   user_dashboard_backend:
     build: ./user_dashboard_backend
+    # Microservicio 4 — Puente RabbitMQ → WebSocket + API REST.
+    # Escucha el Fanout Exchange y retransmite el estado al navegador por WebSocket.
+    # También expone una API REST HTTP para inspección directa del estado en JSON.
+    # Usa 3 hilos en paralelo: asyncio (WebSocket), pika (RabbitMQ) y http.server (REST).
     container_name: dashboard_backend
     depends_on:
       - rabbitmq
     ports:
-      - "8765:8765"  # WebSocket para el dashboard
-      - "8766:8766"  # API REST: /estado  /sensores  /health
+      - "8765:8765"   # WebSocket — dashboard.html se conecta aquí en tiempo real
+      - "8766:8766"   # API REST — GET /estado  GET /sensores  GET /health
     environment:
       RABBITMQ_HOST: rabbitmq
     networks:
       - smarttraffic_net
     restart: on-failure
 
-  # ─────────────────────────────────────────────
-  # MICROSERVICIO 5: Despachador de alertas (Consumer/Producer RabbitMQ)
-  # ─────────────────────────────────────────────
   alert_dispatcher:
     build: ./alert_dispatcher
+    # Microservicio 5 — Consumer/Producer RabbitMQ. Doble función:
+    # 1. Escucha el Fanout → actualiza su copia local del estado → genera alertas si hay cambios.
+    # 2. Escucha la Work Queue → responde consultas de usuarios usando su estado local
+    #    (estado replicado: no necesita preguntar al processor, responde de forma autónoma).
+    # Usa 2 conexiones pika separadas porque pika no es thread-safe.
     container_name: alert_dispatcher
     depends_on:
       - rabbitmq
@@ -123,11 +146,13 @@ services:
       - smarttraffic_net
     restart: on-failure
 
-  # ─────────────────────────────────────────────
-  # MICROSERVICIO 6: Cliente de consultas (Producer/Consumer RabbitMQ)
-  # ─────────────────────────────────────────────
   query_client:
     build: ./query_client
+    # Microservicio 6 — Cliente de consultas asíncronas. Producer/Consumer RabbitMQ.
+    # Cada 15s publica una consulta en la Work Queue con un user_id único y 2-3 zonas.
+    # No se bloquea esperando: sigue funcionando y recibe la respuesta por callback
+    # cuando el dispatcher la publica en el Topic Exchange con routing key answer.<user_id>.
+    # Implementa el patrón Request/Reply asíncrono.
     container_name: query_client
     depends_on:
       - rabbitmq
@@ -137,6 +162,12 @@ services:
       - smarttraffic_net
     restart: on-failure
 
+# ── RED INTERNA ────────────────────────────────────────────────────────────────
 networks:
   smarttraffic_net:
     driver: bridge
+    # Red bridge privada de Docker. Todos los contenedores que la usen pueden
+    # comunicarse entre sí usando el nombre del servicio como hostname.
+    # Ejemplo: "kafka:9092" funciona porque Docker DNS resuelve "kafka"
+    # al IP interno del contenedor kafka dentro de esta red.
+    # Los servicios son invisibles desde fuera excepto por los puertos expuestos con "ports".
