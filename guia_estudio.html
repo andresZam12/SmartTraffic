@@ -583,6 +583,199 @@ docker compose logs -f</code></pre>
   <div class="termino"><div class="t-n">run_coroutine_threadsafe</div><div class="t-d">Función que permite ejecutar una corutina asyncio desde un hilo diferente. En SmartTraffic: el hilo de pika (bloqueante) la usa para enviar el broadcast al loop de asyncio donde viven los WebSockets, sin conflictos de concurrencia.</div></div>
 </div>
 
+<!-- ══════════════════════════ SECCIÓN 6: SO vs SD -->
+<h2 class="s">6. Sistemas Operativos vs Sistemas Distribuidos — La diferencia clave</h2>
+
+<p>El proyecto final integra ambas materias. Entender la diferencia es la base de cualquier pregunta de sustentación.</p>
+
+<table>
+  <tr><th></th><th>Sistemas Operativos</th><th>Sistemas Distribuidos</th></tr>
+  <tr>
+    <td><b>¿Qué administra?</b></td>
+    <td>Recursos de <b>una sola máquina</b>: CPU, RAM, disco, procesos, hilos.</td>
+    <td>Coordinación entre <b>múltiples nodos en red</b> que colaboran como uno solo.</td>
+  </tr>
+  <tr>
+    <td><b>Pregunta central</b></td>
+    <td>¿Cómo reparte el computador sus recursos entre programas?</td>
+    <td>¿Cómo se ponen de acuerdo varios nodos independientes para trabajar juntos?</td>
+  </tr>
+  <tr>
+    <td><b>Comunicación</b></td>
+    <td>Memoria compartida, pipes, señales (dentro de la misma máquina).</td>
+    <td>Mensajes por red: Kafka, RabbitMQ, HTTP, WebSocket.</td>
+  </tr>
+  <tr>
+    <td><b>Falla típica</b></td>
+    <td>Proceso muere, segfault, deadlock.</td>
+    <td>Nodo desconectado, partición de red, mensaje perdido.</td>
+  </tr>
+  <tr>
+    <td><b>En SmartTraffic</b></td>
+    <td>Cada contenedor es un proceso con hilos, memoria y CPU propios.</td>
+    <td>Los 6 microservicios se coordinan por mensajes a través de la red.</td>
+  </tr>
+</table>
+
+<div class="c verde" style="margin-top:14px">
+  <b class="titulo">Frase para recordar</b>
+  SmartTraffic demuestra <b>los dos juntos</b>: cada microservicio es un <em>proceso del SO</em> con sus hilos (SO), pero esos procesos se coordinan a través de Kafka y RabbitMQ sin compartir memoria (SD).
+</div>
+
+
+<!-- ══════════════════════════ SECCIÓN 7: CONCEPTOS DE SO EN EL CÓDIGO -->
+<h2 class="s">7. Conceptos de SO que aparecen en el código</h2>
+
+<h3 class="sub">7.1 Procesos e hilos (threading)</h3>
+<p>Cada contenedor Docker es un <b>proceso</b> independiente del SO. Dentro de varios microservicios hay múltiples <b>hilos</b> corriendo en paralelo:</p>
+<pre><code># user_dashboard_backend — un proceso, tres hilos en paralelo:
+threading.Thread(target=hilo_rabbitmq, daemon=True).start()  # escucha RabbitMQ
+threading.Thread(target=hilo_http,     daemon=True).start()  # servidor HTTP/REST
+# el hilo principal corre el loop de asyncio con los WebSockets</code></pre>
+<p><code>daemon=True</code>: cuando el proceso principal termina, el SO mata los hilos hijos automáticamente. Sin esto quedarían corriendo en segundo plano consumiendo recursos.</p>
+
+<h3 class="sub">7.2 Concurrencia y condición de carrera (race condition)</h3>
+<div class="c rojo">
+  <b class="titulo">Problema real encontrado en el proyecto</b>
+  Pika (cliente de RabbitMQ) <b>no es thread-safe</b>: dos hilos no pueden usar la misma conexión porque se corrompen los frames del socket. Si el hilo de broadcast intentara usar la conexión del hilo principal → error de concurrencia.
+</div>
+<pre><code># SOLUCIÓN: cada hilo crea su PROPIA conexión pika
+def hilo_broadcast():
+    _, canal = conectar_rabbitmq()   # conexión independiente — no comparte la del main
+
+# TAMBIÉN: copiar los dicts antes de iterar para evitar RuntimeError
+states_copy  = dict(zone_states)           # copia snapshot del estado
+ventana_copy = {z: list(v) for z, v in zone_ventana.items()}
+# Si el hilo principal modifica zone_states MIENTRAS este hilo itera → crash
+# La copia elimina ese riesgo</code></pre>
+
+<h3 class="sub">7.3 Comunicación entre procesos (IPC)</h3>
+<p>En SO clásico los procesos se comunican con pipes, sockets o memoria compartida. En SmartTraffic el "pipe" es Kafka o RabbitMQ: mensajes JSON serializados que viajan por red entre contenedores. Es <b>IPC distribuido</b>.</p>
+
+<h3 class="sub">7.4 Virtualización con contenedores</h3>
+<p>Docker usa <b>namespaces</b> (aísla la vista del sistema de archivos, red y procesos) y <b>cgroups</b> (limita CPU y RAM) del kernel Linux. Cada contenedor tiene su entorno aislado sin ser una VM completa — es virtualización a nivel de SO, mucho más liviana.</p>
+
+
+<!-- ══════════════════════════ SECCIÓN 8: DOCKER COMPOSE LÍNEA A LÍNEA -->
+<h2 class="s">8. Docker Compose — Explicación línea a línea</h2>
+
+<h3 class="sub">Servicio de infraestructura (Kafka)</h3>
+<pre><code>kafka:
+  image: confluentinc/cp-kafka:7.4.0   # imagen pública — no hay Dockerfile local
+  depends_on:
+    - zookeeper          # arranca DESPUÉS de zookeeper (orden, no "listo")
+  ports:
+    - "9092:9092"        # host:contenedor — expone el puerto al exterior
+  environment:
+    KAFKA_BROKER_ID: 1                        # ID único en el clúster
+    KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181   # nombre de servicio como hostname
+    KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"   # crea el topic al primer mensaje
+  networks:
+    - smarttraffic_net   # red bridge interna — servicios se ven por nombre</code></pre>
+
+<h3 class="sub">Microservicio (density_processor)</h3>
+<pre><code>traffic_density_processor:
+  build: ./traffic_density_processor   # compila el Dockerfile local
+  depends_on:
+    - kafka
+    - rabbitmq
+  environment:
+    KAFKA_BROKER: kafka:9092     # Docker DNS resuelve "kafka" al IP del contenedor
+    RABBITMQ_HOST: rabbitmq      # mismo mecanismo para RabbitMQ
+  networks:
+    - smarttraffic_net
+  restart: on-failure            # Docker reinicia si el proceso termina con error</code></pre>
+
+<table>
+  <tr><th>Concepto</th><th>Qué significa</th></tr>
+  <tr><td><code>build</code></td><td>Compila un Dockerfile local (tus microservicios).</td></tr>
+  <tr><td><code>image</code></td><td>Descarga imagen pública de Docker Hub (Kafka, RabbitMQ).</td></tr>
+  <tr><td><code>depends_on</code></td><td>Orden de arranque de contenedores. No garantiza que el servicio esté listo — por eso hay lógica de reintento en el código.</td></tr>
+  <tr><td><code>environment</code></td><td>Variables de entorno que el proceso puede leer con <code>os.environ.get()</code>.</td></tr>
+  <tr><td><code>ports</code></td><td>Mapeo host:contenedor. Sin esto, el puerto no es accesible desde fuera de Docker.</td></tr>
+  <tr><td><code>networks</code></td><td>Red interna bridge. Los servicios se comunican por nombre (<code>kafka:9092</code>).</td></tr>
+  <tr><td><code>restart: on-failure</code></td><td>Tolerancia a fallos: Docker reinicia el contenedor si el proceso muere con error.</td></tr>
+</table>
+
+<div class="c azul">
+  <b class="titulo">¿Por qué funciona "kafka:9092" como dirección?</b>
+  Docker Compose crea una red bridge interna llamada <code>smarttraffic_net</code>. Dentro de esa red, el nombre del servicio (<code>kafka</code>, <code>rabbitmq</code>) actúa como hostname y el DNS interno de Docker lo resuelve automáticamente al IP del contenedor. Los microservicios no necesitan conocer la IP real.
+</div>
+
+<h3 class="sub">Comandos esenciales</h3>
+<pre><code>docker compose build              # construye las imágenes de los 6 microservicios
+docker compose up -d              # levanta todos los contenedores en segundo plano
+docker compose ps                 # muestra estado de cada contenedor
+docker compose logs -f &lt;servicio&gt; # logs en tiempo real de un servicio
+docker compose down               # detiene y elimina contenedores y red
+docker compose build &lt;servicio&gt;   # reconstruye solo un microservicio
+docker compose up -d --force-recreate --no-deps &lt;servicio&gt;  # reinicia solo uno</code></pre>
+
+
+<!-- ══════════════════════════ SECCIÓN 9: PREGUNTAS DE SUSTENTACIÓN -->
+<h2 class="s">9. Preguntas frecuentes de sustentación — con respuesta</h2>
+
+<h3 class="sub">Sobre la arquitectura general</h3>
+
+<div class="c azul">
+  <b class="titulo">¿Por qué Kafka Y RabbitMQ y no solo uno?</b>
+  Kafka es un <b>log de eventos persistente</b>: guarda todos los mensajes y permite que múltiples grupos de consumidores lean el mismo historial de forma independiente. RabbitMQ tiene <b>patrones de enrutamiento flexibles</b>: Fanout (broadcast), Work Queue (balance de carga), Topic Exchange (routing por destinatario). Ninguno cubre ambos casos. Kafka recibe los datos brutos del sensor; RabbitMQ distribuye el estado ya procesado.
+</div>
+
+<div class="c azul">
+  <b class="titulo">¿Qué es una KTable y cómo se implementa aquí?</b>
+  Un patrón que convierte un flujo de eventos en una "tabla del estado actual". El procesador no almacena todos los eventos — guarda solo el estado más reciente de cada zona en <code>zone_states</code>. Este mapa se construye procesando cada evento: si llega un nuevo dato de Zona C, se actualiza la entrada de Zona C. Es la base del procesamiento de streams con estado.
+</div>
+
+<div class="c azul">
+  <b class="titulo">¿Qué es consistencia eventual y por qué aparece aquí?</b>
+  El <code>alert_dispatcher</code> tiene su propia copia del estado que se actualiza cada 5 segundos desde el Fanout. Cuando responde una consulta, puede entregar datos de hasta 5 segundos atrás. No es consistencia inmediata (todos los nodos tienen el mismo dato al mismo instante), sino <b>eventual</b>: el sistema converge al estado correcto con un retraso aceptable. El trade-off es disponibilidad: el dispatcher puede responder aunque el procesador esté reiniciando.
+</div>
+
+<h3 class="sub">Sobre conceptos de Sistemas Operativos</h3>
+
+<div class="c naranja">
+  <b class="titulo">¿Qué problema tiene pika con los hilos y cómo lo resolviste?</b>
+  Pika (cliente AMQP) no es thread-safe: si dos hilos comparten la misma <code>BlockingConnection</code>, pueden escribir simultáneamente en el socket y corromper los frames del protocolo. La solución es que cada hilo cree su propia conexión independiente. En el <code>traffic_density_processor</code>, el <code>hilo_broadcast</code> llama a <code>conectar_rabbitmq()</code> internamente en lugar de reutilizar la conexión del hilo principal.
+</div>
+
+<div class="c naranja">
+  <b class="titulo">¿Qué es una race condition y dónde aparece en el código?</b>
+  Una condición de carrera ocurre cuando dos hilos acceden al mismo dato compartido sin sincronización y el resultado depende del orden de ejecución. En el procesador, el hilo principal modifica <code>zone_states</code> continuamente mientras el <code>hilo_broadcast</code> lo itera cada 5 segundos. Si se modifica el dict durante la iteración → <code>RuntimeError</code>. La solución es hacer una copia (<code>dict(zone_states)</code>) antes de iterar, creando un snapshot inmutable.
+</div>
+
+<h3 class="sub">Sobre los patrones de RabbitMQ</h3>
+
+<div class="c verde">
+  <b class="titulo">Explica los tres patrones de RabbitMQ del sistema</b>
+  <b>Fanout Exchange</b> (<code>traffic_updates</code>): el procesador publica el estado y RabbitMQ lo entrega a TODAS las colas suscritas simultáneamente (dashboard + dispatcher). Como una radio: todos escuchan el mismo mensaje. <br/><br/>
+  <b>Work Queue</b> (<code>query_traffic_queue</code>): el query_client publica consultas y el dispatcher las consume una por una. Si hubiera varios dispatchers, RabbitMQ distribuiría el trabajo entre ellos (round-robin). <br/><br/>
+  <b>Topic Exchange</b> (<code>query_answers</code>): el dispatcher publica la respuesta con routing key <code>answer.client_a3f9</code>. Solo el cliente con ese ID tiene una cola ligada a esa key — nadie más recibe su respuesta.
+</div>
+
+<div class="c verde">
+  <b class="titulo">¿Qué es el patrón Request/Reply asíncrono?</b>
+  El <code>query_client</code> envía una consulta a la Work Queue y <b>continúa ejecutándose</b> sin quedarse bloqueado esperando. Registra un callback que se activará cuando llegue la respuesta. Segundos después, el Topic Exchange entrega la respuesta solo a ese cliente. Este patrón permite que el cliente haga otras cosas mientras espera — base de los sistemas reactivos y no bloqueantes.
+</div>
+
+<h3 class="sub">Sobre Docker y despliegue</h3>
+
+<div class="c gris">
+  <b class="titulo">¿Por qué todos los microservicios tienen lógica de reintento si ya está depends_on?</b>
+  <code>depends_on</code> solo garantiza que el <b>contenedor</b> de Kafka arrancó, no que el <b>servicio</b> Kafka esté listo para aceptar conexiones. Kafka tarda varios segundos en inicializarse. Sin lógica de reintento, los microservicios fallarían al intentar conectarse demasiado pronto. El bucle <code>while True: try/except sleep(5)</code> resuelve esto.
+</div>
+
+<div class="c gris">
+  <b class="titulo">¿Qué hace restart: on-failure y qué concepto de SD implementa?</b>
+  El demonio de Docker monitorea el proceso del contenedor. Si termina con código de error distinto de 0, lo reinicia automáticamente. Implementa el concepto de <b>tolerancia a fallos</b>: el sistema se recupera solo de errores transitorios (red momentáneamente caída, servicio aún no listo) sin intervención humana.
+</div>
+
+<div class="c gris">
+  <b class="titulo">¿Cuál es la diferencia entre Consumer Group en Kafka y Work Queue en RabbitMQ?</b>
+  En Kafka, dos <b>Consumer Groups</b> con nombres distintos reciben <em>todos</em> los mensajes del topic de forma independiente y simultánea — ninguno le quita mensajes al otro. En RabbitMQ, una <b>Work Queue</b> con múltiples consumers <em>divide</em> el trabajo: cada mensaje lo recibe solo uno de los consumers. Kafka es para múltiples lectores independientes del mismo flujo; RabbitMQ Work Queue es para distribuir carga de trabajo.
+</div>
+
 <hr/>
 <div class="c azul" style="text-align:center">
   <b class="titulo">SmartTraffic — Proyecto Final Sistemas Distribuidos</b>
