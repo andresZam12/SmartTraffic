@@ -1,13 +1,6 @@
-# Imagen base: Python 3.11 slim.
+# Imagen base mínima: Python 3.11 (~130 MB vs ~900 MB de la versión completa)
 FROM python:3.11-slim
-
 WORKDIR /app
-
-# Solo pika: publica consultas en la Work Queue y escucha respuestas
-# en el Topic Exchange, ambos en RabbitMQ. Implementa el patrón
-# Request/Reply asíncrono sin bloquear el hilo principal.
-RUN pip install pika
-
+RUN pip install pika  # solo RabbitMQ: Work Queue (consultas) + Topic Exchange (respuestas)
 COPY client.py .
-
-CMD ["python", "-u", "client.py"]
+CMD ["python", "-u", "client.py"]  # -u: logs sin buffer, visibles en docker logs

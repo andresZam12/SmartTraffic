@@ -1,14 +1,6 @@
-# Imagen base: Python 3.11 slim.
+# Imagen base mínima: Python 3.11 (~130 MB vs ~900 MB de la versión completa)
 FROM python:3.11-slim
-
 WORKDIR /app
-
-# Este microservicio necesita DOS librerías externas:
-# pika:       cliente AMQP para consumir el Fanout Exchange de RabbitMQ.
-# websockets: servidor WebSocket para enviar datos al navegador en tiempo real.
-# Nota: el servidor HTTP REST usa http.server de la librería estándar — no requiere instalación.
-RUN pip install pika websockets
-
+RUN pip install pika websockets  # pika: consume RabbitMQ; websockets: push al navegador
 COPY dashboard_backend.py .
-
-CMD ["python", "-u", "dashboard_backend.py"]
+CMD ["python", "-u", "dashboard_backend.py"]  # -u: logs sin buffer, visibles en docker logs

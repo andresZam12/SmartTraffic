@@ -1,13 +1,6 @@
-# Imagen base: Python 3.11 slim.
+# Imagen base mínima: Python 3.11 (~130 MB vs ~900 MB de la versión completa)
 FROM python:3.11-slim
-
 WORKDIR /app
-
-# Solo kafka-python: este microservicio únicamente consume de Kafka.
-# No usa RabbitMQ — demuestra que los consumer groups son completamente independientes:
-# el archiver lee el mismo topic que el processor sin ninguna dependencia entre ellos.
-RUN pip install kafka-python
-
+RUN pip install kafka-python  # solo Kafka — consumer group independiente del processor
 COPY archiver.py .
-
-CMD ["python", "-u", "archiver.py"]
+CMD ["python", "-u", "archiver.py"]  # -u: logs sin buffer, visibles en docker logs
